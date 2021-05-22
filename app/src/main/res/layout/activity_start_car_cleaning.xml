@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout android:background="#ffffffff" android:layout_width="fill_parent" android:layout_height="fill_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <ProgressBar android:id="@id/progressBar" android:layout_width="60.0dip" android:layout_height="60.0dip" android:layout_centerInParent="true" />
+    <ImageView android:id="@id/back" android:layout_width="50.0dip" android:layout_height="40.0dip" android:layout_marginLeft="16.0dip" android:layout_marginTop="12.0dip" android:src="@drawable/ic_back_icon" />
+    <com.google.android.material.textview.MaterialTextView android:textSize="28.0sp" android:textStyle="bold" android:textColor="#ff000000" android:id="@+id/carNumber" android:padding="6.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginTop="10.0dip" android:text="DL 5B 8786" android:layout_toRightOf="@id/back" />
+    <ImageView android:layout_width="100.0dip" android:layout_height="3.0dip" android:layout_marginLeft="5.0dip" android:src="#ff000000" android:layout_toRightOf="@id/back" android:layout_below="@id/carNumber" />
+    <RelativeLayout android:id="@+id/carPhotoContainer" android:background="@drawable/round_corners_white" android:layout_width="fill_parent" android:layout_height="230.0dip" android:layout_margin="20.0dip" android:layout_below="@id/carNumber" android:layout_centerHorizontal="true">
+        <ImageView android:id="@+id/carPhoto" android:padding="3.0dip" android:layout_width="fill_parent" android:layout_height="240.0dip" android:scaleType="fitXY" />
+    </RelativeLayout>
+    <ScrollView android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_below="@id/carPhotoContainer">
+        <RelativeLayout android:layout_width="fill_parent" android:layout_height="wrap_content">
+            <LinearLayout android:id="@id/linearLayout1" android:background="@drawable/shadow" android:padding="4.0dip" android:layout_width="fill_parent" android:layout_height="80.0dip" android:layout_marginLeft="20.0dip" android:layout_marginTop="0.0dip" android:layout_marginRight="20.0dip" android:weightSum="4.0">
+                <LinearLayout android:orientation="vertical" android:layout_width="10.0dip" android:layout_height="fill_parent" android:layout_weight="3.0">
+                    <com.google.android.material.textview.MaterialTextView android:textSize="20.0dip" android:textColor="#ff000000" android:id="@+id/carModel" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginLeft="5.0dip" android:layout_marginTop="5.0dip" android:text="Honda City" android:fontFamily="@font/poppin_regular" />
+                    <com.google.android.material.textview.MaterialTextView android:textSize="17.0sp" android:textColor="#ff000000" android:gravity="center_vertical" android:id="@+id/car_Number" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginLeft="5.0dip" android:text="DL 5B 8786" android:fontFamily="@font/poppin_medium" />
+                </LinearLayout>
+                <LinearLayout android:orientation="vertical" android:layout_width="0.0dip" android:layout_height="fill_parent" android:layout_weight="1.0">
+                    <de.hdodenhof.circleimageview.CircleImageView android:id="@+id/carColorImage" android:background="#ffffffff" android:layout_width="fill_parent" android:layout_height="35.0dip" android:layout_margin="4.0dip" app:civ_border_color="#ff000000" app:civ_border_width="1.0dip" />
+                    <com.google.android.material.textview.MaterialTextView android:textSize="13.0sp" android:textColor="#ff000000" android:gravity="center" android:id="@+id/carColor" android:layout_width="fill_parent" android:layout_height="27.0dip" android:text="White" android:fontFamily="@font/poppin_regular" />
+                </LinearLayout>
+            </LinearLayout>
+            <LinearLayout android:id="@id/linearLayout2" android:background="@drawable/shadow" android:padding="2.0dip" android:layout_width="fill_parent" android:layout_height="70.0dip" android:layout_marginLeft="20.0dip" android:layout_marginTop="20.0dip" android:layout_marginRight="20.0dip" android:weightSum="4.0" android:layout_below="@id/linearLayout1">
+                <com.google.android.material.textview.MaterialTextView android:textSize="20.0sp" android:textColor="#ff00171f" android:gravity="center_vertical" android:layout_gravity="center" android:id="@+id/callText" android:background="#ffffffff" android:padding="6.0dip" android:layout_width="75.0dip" android:layout_height="wrap_content" android:layout_marginLeft="5.0dip" android:text="Call Owner" android:layout_weight="3.4" android:fontFamily="@font/poppin_medium" />
+                <RelativeLayout android:layout_width="wrap_content" android:layout_height="fill_parent" android:layout_weight="0.6">
+                    <ImageView android:id="@+id/callOwner" android:background="@drawable/circular_shape_for_views" android:padding="5.0dip" android:layout_width="50.0dip" android:layout_height="50.0dip" android:src="@drawable/ic_call_icon" android:layout_centerInParent="true" android:layout_centerVertical="true" />
+                </RelativeLayout>
+            </LinearLayout>
+            <LinearLayout android:id="@+id/linearLayout3" android:background="@drawable/shadow" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginLeft="20.0dip" android:layout_marginTop="20.0dip" android:layout_marginRight="20.0dip" android:weightSum="4.0" android:layout_below="@id/linearLayout2" android:filterTouchesWhenObscured="false">
+                <LinearLayout android:orientation="vertical" android:layout_width="0.0dip" android:layout_height="wrap_content" android:layout_weight="3.0">
+                    <com.google.android.material.textview.MaterialTextView android:textSize="18.0sp" android:textColor="#ff000000" android:layout_width="fill_parent" android:layout_height="22.0dip" android:layout_marginLeft="9.0dip" android:layout_marginTop="9.0dip" android:layout_marginBottom="7.0dip" android:text="Address" android:fontFamily="@font/poppins_regular" />
+                    <com.google.android.material.textview.MaterialTextView android:textSize="16.0sp" android:textColor="#ff000000" android:id="@+id/carLocation" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginLeft="9.0dip" android:text="hNo 23, Uttam Nagar, New Delhi , India" android:fontFamily="@font/poppin_regular" />
+                </LinearLayout>
+                <LinearLayout android:orientation="vertical" android:layout_width="0.0dip" android:layout_height="wrap_content" android:layout_weight="1.0">
+                    <ImageView android:layout_gravity="center" android:id="@+id/openMap" android:background="@drawable/circular_shape_for_views" android:padding="7.0dip" android:layout_width="49.0dip" android:layout_height="49.0dip" android:layout_marginTop="10.0dip" android:src="@drawable/ic_direction_icon" />
+                    <TextView android:textSize="14.0sp" android:textColor="#ff00171f" android:gravity="center" android:layout_gravity="center" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginTop="8.0dip" android:text="Directions" android:fontFamily="@font/poppin_regular" />
+                </LinearLayout>
+            </LinearLayout>
+            <RelativeLayout android:background="@drawable/white_button_background" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginLeft="55.0dip" android:layout_marginTop="30.0dip" android:layout_marginRight="55.0dip" android:layout_below="@id/linearLayout3">
+                <ImageView android:layout_width="50.0dip" android:layout_height="50.0dip" android:layout_margin="10.0dip" android:src="@drawable/ic_scan_icon" />
+                <TextView android:textSize="21.0dip" android:textStyle="bold" android:textColor="#ffffffff" android:gravity="center" android:id="@+id/scan" android:layout_width="fill_parent" android:layout_height="60.0dip" android:text="SCAN" android:layout_centerVertical="true" />
+            </RelativeLayout>
+        </RelativeLayout>
+    </ScrollView>
+</RelativeLayout>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout android:background="@drawable/shadow" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_margin="5.0dip"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <LinearLayout android:orientation="horizontal" android:id="@+id/linearLayout" android:layout_width="fill_parent" android:layout_height="100.0dip" android:weightSum="5.0">
+        <RelativeLayout android:background="@drawable/round_corners_white" android:layout_width="0.0dip" android:layout_height="fill_parent" android:layout_weight="1.3">
+            <ImageView android:id="@id/carPhoto" android:layout_width="fill_parent" android:layout_height="fill_parent" android:src="@mipmap/ic_launcher" android:scaleType="fitXY" />
+        </RelativeLayout>
+        <LinearLayout android:orientation="vertical" android:layout_width="0.0dip" android:layout_height="80.0dip" android:layout_margin="10.0dip" android:weightSum="4.0" android:layout_weight="2.8">
+            <TextView android:textSize="24.0sp" android:textStyle="bold" android:textColor="#ff00171f" android:gravity="center_vertical" android:id="@id/carNumber" android:layout_width="fill_parent" android:layout_height="0.0dip" android:layout_marginLeft="4.0dip" android:text="DL 546 GH7575" android:layout_weight="2.0" />
+            <TextView android:textSize="16.0sp" android:gravity="center_vertical" android:id="@+id/carName" android:layout_width="fill_parent" android:layout_height="0.0dip" android:layout_marginLeft="4.0dip" android:layout_marginTop="-5.0dip" android:text="i290" android:layout_weight="1.0" android:fontFamily="@font/poppin_regular" />
+            <TextView android:textSize="16.0sp" android:gravity="center_vertical" android:id="@+id/lastCleaned" android:layout_width="fill_parent" android:layout_height="0.0dip" android:layout_marginLeft="4.0dip" android:text="5 Feb Monday" android:layout_weight="1.0" android:fontFamily="@font/poppin_regular" />
+        </LinearLayout>
+        <com.mikhaellopez.circularimageview.CircularImageView android:textSize="25.0sp" android:textStyle="bold" android:textColor="#ff020202" android:gravity="center" android:layout_gravity="center" android:id="@+id/active" android:background="@drawable/circular_deactivated_background" android:layout_width="0.0dip" android:layout_height="fill_parent" android:layout_weight="0.9" app:civ_circle_color="#ff000000" />
+    </LinearLayout>
+</RelativeLayout>

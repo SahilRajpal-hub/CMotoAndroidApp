@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout android:layout_width="fill_parent" android:layout_height="fill_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <LinearLayout android:orientation="horizontal" android:id="@id/loadingEffect" android:background="#b0000000" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="fill_parent" />
+    <ProgressBar android:id="@id/progressBar" android:layout_width="50.0dip" android:layout_height="50.0dip" android:layout_centerInParent="true" />
+    <LinearLayout android:gravity="center" android:orientation="vertical" android:layout_width="fill_parent" android:layout_height="200.0dip" android:layout_margin="30.0dip" android:weightSum="3.0" android:layout_centerInParent="true">
+        <com.google.android.material.textfield.TextInputEditText android:textColorHint="#ff000000" android:id="@+id/otp" android:layout_width="fill_parent" android:layout_height="0.0dip" android:layout_margin="10.0dip" android:hint="Enter the otp.." android:layout_weight="1.0" app:hintTextColor="#ff000000" />
+        <RelativeLayout android:background="@drawable/white_button_background" android:layout_width="fill_parent" android:layout_height="0.0dip" android:layout_margin="10.0dip" android:layout_weight="1.0"> ProgressBar
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:translationZ="3dp"
+        android:layout_centerInParent="true"
+        android:id="@+id/progressBar"/> <TextView android:textSize="21.0dip" android:textStyle="bold" android:textColor="#ffffffff" android:gravity="center" android:id="@+id/verifyOtp" android:layout_width="fill_parent" android:layout_height="60.0dip" android:text="VERIFY OTP" android:layout_centerVertical="true" />
+        </RelativeLayout>
+        <RelativeLayout android:background="@drawable/white_button_background" android:layout_width="fill_parent" android:layout_height="0.0dip" android:layout_margin="10.0dip" android:layout_weight="1.0">
+            <TextView android:textSize="21.0dip" android:textStyle="bold" android:textColor="#ffffffff" android:gravity="center" android:id="@+id/captureCash" android:layout_width="fill_parent" android:layout_height="60.0dip" android:text="Capture cash" android:layout_centerVertical="true" />
+        </RelativeLayout>
+    </LinearLayout>
+</RelativeLayout>

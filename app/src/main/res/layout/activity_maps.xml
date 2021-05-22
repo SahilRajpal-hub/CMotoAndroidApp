@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout android:layout_width="fill_parent" android:layout_height="fill_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <fragment android:name="com.google.android.gms.maps.SupportMapFragment" android:id="@+id/map" android:layout_width="fill_parent" android:layout_height="fill_parent" xmlns:map="http://schemas.android.com/apk/res-auto" />
+    <ImageView android:id="@+id/marker" android:layout_width="50.0dip" android:layout_height="50.0dip" android:layout_marginTop="120.0dip" android:layout_marginRight="10.0dip" android:src="@drawable/ic_marker" android:layout_alignRight="@id/map" android:layout_alignEnd="@id/map" />
+    <TextView android:textSize="20.0sp" android:textStyle="bold" android:gravity="center" android:id="@+id/addLocation" android:background="#ffffffff" android:layout_width="150.0dip" android:layout_height="40.0dip" android:text="Add Location" android:layout_below="@id/marker" android:layout_alignParentRight="true" android:layout_alignParentEnd="true" />
+</RelativeLayout>

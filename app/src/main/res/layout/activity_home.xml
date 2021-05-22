@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout android:background="#ffffffff" android:layout_width="fill_parent" android:layout_height="fill_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <RelativeLayout android:id="@+id/Menu" android:background="#ff00171f" android:visibility="gone" android:layout_width="250.0dip" android:translationZ="0.5dp" android:layout_height="fill_parent">
+        <ImageView android:id="@+id/exit" android:layout_width="40.0dip" android:layout_height="40.0dip" android:layout_margin="15.0dip" android:src="@drawable/ic_menu_icon_white" />
+        <de.hdodenhof.circleimageview.CircleImageView android:id="@+id/profileImage" android:layout_width="100.0dip" android:layout_height="100.0dip" android:layout_marginTop="50.0dip" android:src="@mipmap/ic_launcher_round" android:layout_centerHorizontal="true" />
+        <TextView android:textSize="21.0sp" android:textColor="#ffffffff" android:id="@+id/name" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="15.0dip" android:text="JOnna Vargesse" android:layout_below="@id/profileImage" android:layout_centerHorizontal="true" android:fontFamily="@font/poppins" />
+        <ScrollView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="54.0dip" android:layout_below="@id/name">
+            <RelativeLayout android:layout_width="wrap_content" android:layout_height="wrap_content">
+                <LinearLayout android:orientation="vertical" android:id="@id/linearLayout1" android:padding="20.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginTop="20.0dip">
+                    <TextView android:textSize="23.0sp" android:textStyle="normal" android:textColor="#ffffffff" android:gravity="start" android:id="@+id/profile" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_margin="5.0dip" android:text="Profile" android:fontFamily="@font/poppin_medium" />
+                    <TextView android:textSize="23.0sp" android:textColor="#ffffffff" android:gravity="start" android:id="@+id/carList" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_margin="5.0dip" android:text="Car List" android:fontFamily="@font/poppin_medium" />
+                    <TextView android:textSize="23.0sp" android:textColor="#ffffffff" android:gravity="start" android:id="@+id/paymentsDetails" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_margin="5.0dip" android:text="Payment Details" android:fontFamily="@font/poppin_medium" />
+                </LinearLayout>
+                <ImageView android:id="@+id/line2" android:layout_width="fill_parent" android:layout_height="0.5dip" android:layout_marginLeft="40.0dip" android:layout_marginRight="40.0dip" android:src="#ffffffff" android:layout_below="@id/linearLayout1" />
+                <LinearLayout android:orientation="vertical" android:id="@+id/linearLayout2" android:padding="20.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginTop="0.0dip" android:layout_below="@id/line2">
+                    <TextView android:textSize="23.0sp" android:textStyle="normal" android:textColor="#ffffffff" android:gravity="start" android:id="@+id/termsAndCondition" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_margin="5.0dip" android:text="@string/termsAndConditions" android:fontFamily="@font/poppin_medium" />
+                    <TextView android:textSize="23.0sp" android:textColor="#ffffffff" android:gravity="start" android:id="@+id/aboutUs" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_margin="5.0dip" android:text="About Us" android:fontFamily="@font/poppin_medium" />
+                    <TextView android:textSize="23.0sp" android:textColor="#ffffffff" android:gravity="start" android:id="@+id/contactUs" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_margin="5.0dip" android:text="Contact Us" android:fontFamily="@font/poppin_medium" />
+                </LinearLayout>
+                <ImageView android:id="@id/line3" android:layout_width="fill_parent" android:layout_height="0.5dip" android:layout_marginLeft="40.0dip" android:layout_marginRight="40.0dip" android:src="#ffffffff" android:layout_below="@id/linearLayout2" />
+                <TextView android:textSize="23.0sp" android:textColor="#ffffffff" android:gravity="start" android:id="@+id/logout" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_margin="25.0dip" android:text="Log out" android:layout_below="@id/line3" android:fontFamily="@font/poppin_medium" />
+            </RelativeLayout>
+        </ScrollView>
+        <LinearLayout android:padding="4.0dip" android:layout_width="fill_parent" android:layout_height="50.0dip" android:layout_marginLeft="5.0dip" android:layout_marginRight="8.0dip" android:layout_marginBottom="20.0dip" android:weightSum="3.0" android:layout_alignParentBottom="true">
+            <ImageView android:id="@+id/facebookLink" android:padding="2.0dip" android:layout_width="0.0dip" android:layout_height="40.0dip" android:src="@drawable/ic_icons8_facebook_f" android:layout_weight="1.0" />
+            <ImageView android:id="@+id/instagramLink" android:padding="2.0dip" android:layout_width="0.0dip" android:layout_height="40.0dip" android:src="@drawable/ic_icons8_instagram" android:layout_weight="1.0" />
+            <ImageView android:id="@+id/lunkedIn" android:padding="2.0dip" android:layout_width="0.0dip" android:layout_height="40.0dip" android:src="@drawable/ic_icons8_linkedin_2" android:layout_weight="1.0" />
+        </LinearLayout>
+    </RelativeLayout>
+    <RelativeLayout android:id="@+id/remainingBody"  android:visibility="gone" android:translationZ="0.5dp" android:layout_width="fill_parent" android:layout_height="fill_parent" android:layout_toRightOf="@id/Menu" />
+    <androidx.appcompat.widget.Toolbar android:id="@+id/toolbar" android:background="#ffffffff" android:layout_width="fill_parent" android:layout_height="50.0dip" android:layout_marginTop="8.0dip" app:layout_scrollFlags="enterAlways|scroll|snap" app:popupTheme="@style/ThemeOverlay.AppCompat.Light" app:title="CMoto">
+        <ImageView android:id="@+id/menu" android:layout_width="40.0dip" android:layout_height="40.0dip" android:layout_marginRight="15.0dip" android:src="@drawable/ic_menu_icon_darkblue" />
+        <TextView android:textSize="33.0sp" android:textStyle="bold" android:textColor="#ff000000" android:gravity="center_vertical" android:id="@+id/toolbarText" android:layout_width="fill_parent" android:layout_height="50.0dp" android:layout_marginLeft="10.0dp" android:text="Car List" android:fontFamily="@font/poppins" />
+    </androidx.appcompat.widget.Toolbar>
+    <ImageView android:background="#ff000000" android:layout_width="100.0dip" android:layout_height="3.0dip" android:layout_marginLeft="70.0dip" android:layout_toRightOf="@id/login_back" android:layout_below="@id/toolbar" />
+    <LinearLayout android:orientation="horizontal" android:id="@+id/relativeLayout" android:padding="20.0dip" android:layout_width="fill_parent" android:layout_height="100.0dip" android:layout_marginTop="10.0dip" android:weightSum="2.0" android:layout_below="@id/toolbar">
+        <RelativeLayout android:background="@drawable/shadow_large_curvature" android:translationZ="2dp" android:layout_width="0.0dip" android:layout_height="55.0dip" android:layout_marginLeft="20.0dip" android:layout_marginRight="20.0dip" android:layout_weight="1.0">
+            <TextView android:textSize="19.0dip" android:textStyle="bold" android:textColor="#ff0e0d0e" android:gravity="center" android:id="@+id/done" android:layout_width="fill_parent" android:layout_height="fill_parent" android:fontFamily="@font/poppin_regular" />
+        </RelativeLayout>
+        <RelativeLayout android:background="@drawable/shadow_large_curvature" android:translationZ="2dp" android:layout_width="0.0dip" android:layout_height="55.0dip" android:layout_marginLeft="20.0dip" android:layout_marginRight="20.0dip" android:layout_weight="1.0">
+            <TextView android:textSize="19.0dip" android:textStyle="bold" android:textColor="#ff0e0d0e" android:gravity="center" android:id="@+id/remaining" android:layout_width="fill_parent" android:layout_height="fill_parent" android:fontFamily="@font/poppin_regular" />
+        </RelativeLayout>
+    </LinearLayout>
+    <ProgressBar android:id="@id/progressBar" android:layout_width="50.0dip" android:layout_height="50.0dip" android:layout_centerInParent="true" />
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout android:id="@+id/refresh" android:layout_width="fill_parent" android:layout_height="fill_parent" android:layout_below="@id/relativeLayout">
+        <androidx.recyclerview.widget.RecyclerView android:id="@+id/recyclerView" android:layout_width="fill_parent" android:layout_height="fill_parent" android:layout_marginTop="-7.0dip" android:layout_below="@id/refresh" />
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+    <TextView android:textSize="20.0sp" android:textStyle="bold" android:textColor="#ff00171f" android:gravity="center" android:id="@+id/workComplete" android:visibility="gone" android:layout_width="100.0dip" android:layout_height="70.0dip" android:text="NO More Duties availiable" android:layout_centerInParent="true" />
+    <ImageView android:id="@+id/scanner" android:background="@drawable/circular_shape_for_views" android:padding="15.0dp" android:visibility="gone" android:layout_width="60.0dp" android:layout_height="60.0dip" android:layout_margin="30.0dip" android:layout_marginBottom="30.0dip" android:src="@drawable/ic_scan_icon" android:layout_alignParentRight="true" android:layout_alignParentBottom="true" android:layout_alignParentEnd="true" />
+</RelativeLayout>

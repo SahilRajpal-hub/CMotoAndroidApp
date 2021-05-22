@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout android:background="#ffffffff" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_margin="4.0dip"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <LinearLayout android:orientation="horizontal" android:layout_width="fill_parent" android:layout_height="80.0dip" android:weightSum="5.0">
+        <RelativeLayout android:layout_width="0.0dip" android:layout_height="fill_parent" android:layout_weight="1.0">
+            <ImageView android:layout_width="fill_parent" android:layout_height="fill_parent" android:src="@drawable/ic_calender" />
+            <TextView android:textStyle="bold" android:textColor="#ff5cbeea" android:gravity="center" android:id="@+id/day" android:layout_width="40.0dip" android:layout_height="20.0dip" android:layout_marginTop="38.0dip" android:layout_centerHorizontal="true" android:fontFamily="@font/poppin_regular" />
+        </RelativeLayout>
+        <LinearLayout android:orientation="vertical" android:layout_width="0.0dip" android:layout_height="80.0dip" android:weightSum="3.0" android:layout_weight="3.0">
+            <TextView android:textSize="22.0sp" android:textColor="#ff000000" android:gravity="center_vertical" android:id="@+id/carsCleaned" android:paddingLeft="10.0dip" android:layout_width="fill_parent" android:layout_height="0.0dip" android:layout_marginLeft="4.0dip" android:layout_weight="1.0" android:fontFamily="@font/poppins" />
+            <TextView android:textSize="18.0sp" android:gravity="center_vertical" android:id="@+id/date" android:paddingLeft="10.0dip" android:paddingTop="4.0dip" android:layout_width="fill_parent" android:layout_height="0.0dip" android:layout_marginLeft="4.0dip" android:layout_weight="1.0" android:fontFamily="@font/poppin_regular" />
+            <TextView android:textSize="13.0sp" android:gravity="center_vertical" android:id="@+id/paidOn" android:paddingLeft="10.0dip" android:layout_width="wrap_content" android:layout_height="0.0dip" android:layout_marginLeft="4.0dip" android:singleLine="true" android:layout_weight="1.0" android:fontFamily="@font/poppin_regular" />
+        </LinearLayout>
+        <TextView android:textSize="23.0sp" android:textStyle="normal" android:textColor="#ff000000" android:id="@id/amount" android:layout_width="0.0dip" android:layout_height="fill_parent" android:layout_weight="1.0" />
+    </LinearLayout>
+</RelativeLayout>

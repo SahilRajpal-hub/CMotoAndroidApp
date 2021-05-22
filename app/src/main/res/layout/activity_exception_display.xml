@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout android:layout_width="fill_parent" android:layout_height="fill_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <TextView android:id="@+id/exception_text" android:scrollbars="vertical" android:layout_width="fill_parent" android:layout_height="600.0dip" android:layout_marginTop="40.0dip" />
+    <androidx.appcompat.widget.AppCompatButton android:textColor="#ffffffff" android:id="@+id/btnBack" android:background="#ff050c33" android:layout_width="60.0dip" android:layout_height="60.0dip" android:layout_marginTop="20.0dip" android:text="BACK" android:layout_below="@id/exception_text" android:layout_centerHorizontal="true" />
+</RelativeLayout>
