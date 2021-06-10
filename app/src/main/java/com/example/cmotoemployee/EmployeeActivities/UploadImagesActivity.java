@@ -4,7 +4,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Matrix;
+import android.graphics.Paint;
+import android.graphics.Point;
 import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
@@ -15,16 +19,22 @@ import android.os.SystemClock;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import com.example.cmotoemployee.InteriorEmployeeActivities.InteriorHomeActivity;
+import com.example.cmotoemployee.InteriorEmployeeActivities.InteriorPaymentActivity;
 import com.example.cmotoemployee.R;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -35,6 +45,10 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+
+import org.jetbrains.annotations.NotNull;
+
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -60,6 +74,8 @@ public class UploadImagesActivity extends AppCompatActivity {
     private String carNumber;
 
     private String employeeType;
+
+    private String employeeWorkHistory;
 
     private String employeesType;
 
@@ -209,17 +225,20 @@ public class UploadImagesActivity extends AppCompatActivity {
         this.area = getIntent().getStringExtra("area");
         if (getIntent().hasExtra("interior")) {
             this.employeeType = "InteriorEmployee";
+            this.employeeWorkHistory = "Interior Work History";
             this.employeesType = "InteriorEmployees";
             this.status = "Interior Cleaning status";
             this.workHistory = "Interior Work History";
         } else {
             this.employeeType = "Employee";
             this.employeesType = "Employees";
+            this.employeeWorkHistory = "Work History";
             this.status = "status";
             this.workHistory = "Work History";
         }
         this.submit.setOnClickListener(new View.OnClickListener() {
             public void onClick(View param1View) {
+
                 if (!UploadImagesActivity.this.image1Uploaded && !UploadImagesActivity.this.image2Uploaded && !UploadImagesActivity.this.image3Uploaded && !UploadImagesActivity.this.image4Uploaded) {
                     Toast.makeText((Context)UploadImagesActivity.this, "Upload all images", Toast.LENGTH_SHORT).show();
                     return;
@@ -234,28 +253,28 @@ public class UploadImagesActivity extends AppCompatActivity {
         });
         this.uploadImage1.setOnClickListener(new View.OnClickListener() {
             public void onClick(View param1View) {
-                if (SystemClock.elapsedRealtime() - UploadImagesActivity.this.lastClicked < 1000L)
+                if (SystemClock.elapsedRealtime() - UploadImagesActivity.this.lastClicked < 1000)
                     return;
                 lastClicked = SystemClock.elapsedRealtime();
                 if (UploadImagesActivity.this.image1Uploaded) {
                     Toast.makeText((Context)UploadImagesActivity.this, "This image is uploaded", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                Log.d("UploadImagesActivity", "onClick: launching camera after checking permissions");
-                reference = FirebaseDatabase.getInstance().getReference().child("Car Status").child(UploadImagesActivity.this.getIntent().getStringExtra("carNumber"));
+                Log.d("UploadImagesActivity", "onClick: launching camera after checking permissions" + getIntent().getStringExtra(getString(R.string.carNumber)));
+                reference = FirebaseDatabase.getInstance().getReference().child("Car Status").child(getIntent().getStringExtra(getString(R.string.carNumber)));
                 UploadImagesActivity.this.reference.addListenerForSingleValueEvent(new ValueEventListener() {
                     public void onCancelled(DatabaseError param2DatabaseError) {}
 
                     public void onDataChange(DataSnapshot param2DataSnapshot) {
                         long l = System.currentTimeMillis();
-                        Double double_ = Double.valueOf(param2DataSnapshot.child("timeStamp").getValue().toString());
-                        if (l - double_.doubleValue() < (UploadImagesActivity.this.timerValue * 60000)) {
-                            Log.d("UploadImagesActivity", "onDataChange: Timer is not complete timeStamp : " + ((l - double_.doubleValue()) / 60000.0D));
+                        Double timeStamp = Double.valueOf(param2DataSnapshot.child("timeStamp").getValue().toString());
+                        if (l - timeStamp < (timerValue * 60000)) {
+                            Log.d("UploadImagesActivity", "onDataChange: Timer is not complete timeStamp : " + ((l - timeStamp) / 60000.0D));
                         } else if (ActivityCompat.checkSelfPermission((Context)UploadImagesActivity.this, UploadImagesActivity.this.CAMERA_PERMISSION[0]) == 0) {
                             Intent intent = new Intent("android.media.action.IMAGE_CAPTURE");
                             intent.putExtra("output", (Parcelable)Uri.parse("file:///sdcard/photo1.jpg"));
                             intent.putExtra(UploadImagesActivity.this.getString(R.string.carNumber), UploadImagesActivity.this.getIntent().getStringExtra("carNumber").toString());
-                            UploadImagesActivity.this.startActivityForResult(intent, 2);
+                            startActivityForResult(intent, 2);
                         }
                     }
                 });
@@ -284,7 +303,7 @@ public class UploadImagesActivity extends AppCompatActivity {
                             Intent intent = new Intent("android.media.action.IMAGE_CAPTURE");
                             intent.putExtra("output", (Parcelable)Uri.parse("file:///sdcard/photo2.jpg"));
                             intent.putExtra(UploadImagesActivity.this.getString(R.string.carNumber), UploadImagesActivity.this.getIntent().getStringExtra("carNumber").toString());
-                            UploadImagesActivity.this.startActivityForResult(intent, 2);
+                            UploadImagesActivity.this.startActivityForResult(intent, CAMERA_REQUEST_CODE);
                         }
                     }
                 });
@@ -378,36 +397,147 @@ public class UploadImagesActivity extends AppCompatActivity {
     public void uploadImages() {
         this.progressBar.setVisibility(View.VISIBLE);
         this.loadingEffect.setVisibility(View.VISIBLE);
-        getWindow().setFlags(16, 16);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+        WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+        float scale = getApplicationContext().getResources().getDisplayMetrics().density;
         Uri uri1 = Uri.parse("file:///sdcard/photo1.jpg");
         Uri uri2 = Uri.parse("file:///sdcard/photo2.jpg");
         Uri uri3 = Uri.parse("file:///sdcard/photo3.jpg");
         Uri uri4 = Uri.parse("file:///sdcard/photo4.jpg");
         Bitmap[] arrayOfBitmap = new Bitmap[4];
         try {
-            Bitmap bitmap1 = modifyOrientation(MediaStore.Images.Media.getBitmap(getContentResolver(), uri1), uri1);
-            Bitmap bitmap2 = modifyOrientation(MediaStore.Images.Media.getBitmap(getContentResolver(), uri2), uri2);
-            Bitmap bitmap3 = modifyOrientation(MediaStore.Images.Media.getBitmap(getContentResolver(), uri3), uri3);
-            Bitmap bitmap4 = modifyOrientation(MediaStore.Images.Media.getBitmap(getContentResolver(), uri4), uri4);
-            int i = (int)(bitmap1.getWidth() * 0.3D);
-            int j = bitmap1.getHeight();
-            j = (int)(j * 0.3D);
-            arrayOfBitmap[0] = Bitmap.createScaledBitmap(bitmap1, i, j, true);
-            arrayOfBitmap[1] = Bitmap.createScaledBitmap(bitmap2, (int)(bitmap2.getWidth() * 0.3D), (int)(bitmap2.getHeight() * 0.3D), true);
-            i = (int)(bitmap3.getWidth() * 0.3D);
-            j = bitmap3.getHeight();
-            Bitmap[] arrayOfBitmap1 = arrayOfBitmap;
-            j = (int)(j * 0.3D);
-            arrayOfBitmap1[2] = Bitmap.createScaledBitmap(bitmap3, i, j, true);
-            arrayOfBitmap1[3] = Bitmap.createScaledBitmap(bitmap4, (int)(bitmap4.getWidth() * 0.3D), (int)(bitmap4.getHeight() * 0.3D), true);
-            bitmap1.recycle();
-            bitmap2.recycle();
-            bitmap3.recycle();
-            bitmap4.recycle();
+
+            Bitmap[] parts = new Bitmap[4];
+            String date = new SimpleDateFormat("yyyy-MM-dd").format(Calendar.getInstance().getTime());
+
+            parts[0] = modifyOrientation(MediaStore.Images.Media.getBitmap(getContentResolver(), uri1), uri1);
+            parts[1] = modifyOrientation(MediaStore.Images.Media.getBitmap(getContentResolver(), uri2), uri2);
+            parts[2] = modifyOrientation(MediaStore.Images.Media.getBitmap(getContentResolver(), uri3), uri3);
+            parts[3] = modifyOrientation(MediaStore.Images.Media.getBitmap(getContentResolver(), uri4), uri4);
+
+
+            Bitmap result = Bitmap.createBitmap(parts[0].getWidth(), parts[0].getHeight() * 4, Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(result);
+            Paint paint = new Paint();
+            paint.setColor(Color.BLUE);
+            paint.setTextSize(12);
+
+            for (int i = 0; i < parts.length; i++) {
+                canvas.drawBitmap(parts[i], 0, parts[i].getHeight() * i, paint);
+            }
+
+            Bitmap bitmap = drawStringOnBitmap(result,date,new Point(200,200),Color.BLUE,60*scale);
+
+
+
+            byte[] bytes = getByteFromBitmap(bitmap, 50);
+            UploadTask uploadTask = null;
+            uploadTask = storageReference.putBytes(bytes);
+            uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                    storageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                        @Override
+                        public void onSuccess(Uri uri) {
+                            String URI = uri.toString();
+                            try {
+                                reference = FirebaseDatabase.getInstance().getReference();
+                                reference.child("Car Status").child(carNumber).child("doneBy").setValue(auth.getUid());
+                                reference.child("Car Status").child(carNumber).child(employeeWorkHistory).child(date).child("doneBy").setValue(auth.getUid());
+                                reference.child("Car Status").child(carNumber).child(employeeWorkHistory).child(date).child("Photo Url").setValue(URI);
+                                reference.child("Car Status").child(carNumber).child(status).setValue("cleaned");
+                                reference.child("Car Status").child(carNumber).child("timeStamp").setValue("0");
+                                if (getIntent().hasExtra("interior")) {
+                                    reference.child("Car Status").child(carNumber).child("lastCleanedInterior").setValue(date);
+                                }
+                                reference.child(employeeType).child(FirebaseAuth.getInstance().getUid()).child("status").setValue("free");
+                                reference.child(employeeType).child(FirebaseAuth.getInstance().getUid()).child("working on").setValue("");
+                                reference.child(employeesType).child(area).child(FirebaseAuth.getInstance().getUid()).child("working on").setValue("");
+                                reference.child(employeeType).child(auth.getUid()).child(employeeWorkHistory).child(date).child(carNumber).child("time").setValue(Calendar.getInstance().getTime());
+                                reference.child(employeeType).child(auth.getUid()).child(employeeWorkHistory).child(date).child(carNumber).child("Image Url " + n).setValue(URI);
+                            } catch (Exception e) {
+                                Log.d(TAG, "onSuccess: got error after uploading" + e.getMessage());
+                                Toast.makeText(UploadImagesActivity.this, "error : " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    });
+                }
+            }).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onComplete(@NonNull @NotNull Task<UploadTask.TaskSnapshot> task) {
+                    result.recycle();
+                    parts[0].recycle();
+                    parts[1].recycle();
+                    parts[2].recycle();
+                    parts[3].recycle();
+                    progressBar.setVisibility(View.GONE);
+                    loadingEffect.setVisibility(View.GONE);
+                    getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                    if (UploadImagesActivity.this.getIntent().hasExtra("interior")) {
+                        startActivity(new Intent(UploadImagesActivity.this,InteriorHomeActivity.class).putExtra("interior","InteriorEmployee").addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
+                    } else {
+                        startActivity(new Intent(UploadImagesActivity.this,HomeActivity.class).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
+                    }
+
+//                    finish();
+
+                }
+            }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onProgress(@NonNull @NotNull UploadTask.TaskSnapshot snapshot) {
+                    result.recycle();
+                    parts[0].recycle();
+                    parts[1].recycle();
+                    parts[2].recycle();
+                    parts[3].recycle();
+                }
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull @NotNull Exception e) {
+                    result.recycle();
+                    parts[0].recycle();
+                    parts[1].recycle();
+                    parts[2].recycle();
+                    parts[3].recycle();
+                    progressBar.setVisibility(View.GONE);
+                    loadingEffect.setVisibility(View.GONE);
+                    getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                }
+            });
+
+
+
+
+
         } catch (IOException iOException) {
             iOException.printStackTrace();
         }
 
     }
+
+    public static Bitmap drawStringOnBitmap(Bitmap src, String string, Point location, int color, float size) {
+
+        Bitmap result = Bitmap.createBitmap(src.getWidth(), src.getHeight(), src.getConfig());
+
+        Canvas canvas = new Canvas(result);
+        Paint paint = new Paint();
+        canvas.drawBitmap(src, 0, 0, null);
+
+        paint.setColor(color);
+//        paint.setAlpha(alpha);
+        paint.setTextSize(size);
+//        paint.setAntiAlias(true);
+//        paint.setUnderlineText(underline);
+        canvas.drawText(string, location.x, location.y, paint);
+
+        return result;
+    }
+
+    private byte[] getByteFromBitmap(Bitmap bitmap, int quality) {
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG,quality,stream);
+        return stream.toByteArray();
+    }
+
 }
 

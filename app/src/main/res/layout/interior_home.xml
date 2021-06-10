@@ -2,7 +2,7 @@
 <RelativeLayout xmlns:tools="http://schemas.android.com/tools"
     android:background="#ffffffff" android:layout_width="fill_parent" android:layout_height="fill_parent"
   xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
-    <RelativeLayout android:id="@id/Menu" android:background="#ff00171f" android:visibility="gone" android:layout_width="250.0dip" android:layout_height="fill_parent">
+    <RelativeLayout android:id="@id/Menu" android:translationZ="0.5dp" android:background="#ff00171f" android:visibility="gone" android:layout_width="250.0dip" android:layout_height="fill_parent">
         <ImageView android:id="@id/exit" android:layout_width="40.0dip" android:layout_height="40.0dip" android:layout_margin="15.0dip" android:src="@drawable/ic_menu_icon_white" />
         <de.hdodenhof.circleimageview.CircleImageView android:id="@id/profileImage" android:layout_width="100.0dip" android:layout_height="100.0dip" android:layout_marginTop="50.0dip" android:src="@mipmap/ic_launcher_round" android:layout_centerHorizontal="true" />
         <TextView android:textSize="21.0sp" android:textColor="#ffffffff" android:id="@id/name" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="15.0dip" android:text="JOnna Vargesse" android:layout_below="@id/profileImage" android:layout_centerHorizontal="true" android:fontFamily="@font/poppins" />
@@ -29,7 +29,7 @@
             <ImageView android:id="@id/lunkedIn" android:padding="2.0dip" android:layout_width="0.0dip" android:layout_height="40.0dip" android:src="@drawable/ic_icons8_linkedin_2" android:layout_weight="1.0" />
         </LinearLayout>
     </RelativeLayout>
-    <RelativeLayout android:id="@id/remainingBody" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="fill_parent" android:layout_toRightOf="@id/Menu" />
+    <RelativeLayout android:id="@id/remainingBody" android:translationZ="0.5dp" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="fill_parent" android:layout_toRightOf="@id/Menu" />
     <androidx.appcompat.widget.Toolbar android:id="@id/toolbar" android:background="#ffffffff" android:layout_width="fill_parent" android:layout_height="50.0dip" android:layout_marginTop="8.0dip" app:layout_scrollFlags="enterAlways|scroll|snap" app:popupTheme="@style/ThemeOverlay.AppCompat.Light" app:title="CMoto">
         <ImageView android:id="@id/menu" android:layout_width="40.0dip" android:layout_height="40.0dip" android:layout_marginRight="15.0dip" android:src="@drawable/ic_menu_icon_darkblue" />
         <TextView android:textSize="33.0sp" android:textStyle="bold" android:textColor="#ff000000" android:gravity="center_vertical" android:id="@id/toolbarText" android:layout_width="fill_parent" android:layout_height="50.0dip" android:layout_marginLeft="10.0dip" android:text="Car List" android:fontFamily="@font/poppins" />
@@ -44,26 +44,36 @@
             <TextView android:textSize="19.0dip" android:textStyle="bold" android:textColor="#ff0e0d0e" android:gravity="center" android:id="@id/remaining" android:layout_width="fill_parent" android:layout_height="fill_parent" android:text="240\nrema" android:fontFamily="@font/poppin_regular" />
         </RelativeLayout>
     </LinearLayout>
-    <ProgressBar android:id="@id/progressBar" android:layout_width="50.0dip" android:layout_height="50.0dip" android:layout_centerInParent="true" />
+    <ProgressBar android:id="@id/progressBar" android:translationZ="3dp" android:layout_width="50.0dip" android:layout_height="50.0dip" android:layout_centerInParent="true" />
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/refresh"
+        android:layout_below="@id/relativeLayout">
+
+
     <ScrollView android:orientation="vertical" android:layout_width="fill_parent" android:layout_height="fill_parent" android:layout_marginBottom="15.0dip" android:layout_below="@id/relativeLayout">
         <RelativeLayout android:layout_width="wrap_content" android:layout_height="wrap_content">
-            <TextView android:textSize="27.0dip" android:textColor="@color/colorAccent" android:id="@+id/monday" android:padding="20.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_margin="10.0dip" android:text="MONDAY" android:textAlignment="center"
-                android:gravity="center_horizontal" />
+            <TextView android:background="@drawable/shadow" android:textStyle="bold" android:layout_width="fill_parent"  android:layout_margin="10.0dip" android:translationZ="2.0dip" android:elevation="10.0dip" android:textSize="27.0dip" android:textColor="#000" android:id="@+id/monday" android:padding="20.0dip"  android:layout_height="wrap_content"  android:text="MONDAY" android:textAlignment="textStart"
+                android:gravity="center_horizontal"
+                tools:ignore="RtlCompat" />
             <androidx.recyclerview.widget.RecyclerView android:id="@+id/mondayCars" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_below="@id/monday" />
-            <TextView android:textSize="27.0dip" android:textColor="@color/colorAccent" android:id="@+id/tuesday" android:padding="20.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_margin="10.0dip" android:text="TUESDAY" android:layout_below="@id/mondayCars" android:textAlignment="center"
+            <TextView android:background="@drawable/shadow" android:textStyle="bold"   android:translationZ="2.0dip" android:elevation="10.0dip" android:textSize="27.0dip" android:textColor="#000" android:id="@+id/tuesday" android:padding="20.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_margin="10.0dip" android:text="TUESDAY" android:layout_below="@id/mondayCars" android:textAlignment="textStart" tools:ignore="RtlCompat"
                 android:gravity="center_horizontal" />
             <androidx.recyclerview.widget.RecyclerView android:id="@+id/tuesdayCars" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_below="@id/tuesday" />
-            <TextView android:textSize="27.0dip" android:textColor="@color/colorAccent" android:id="@+id/wednesday" android:padding="20.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_margin="10.0dip" android:text="WEDNESDAY" android:layout_below="@id/tuesdayCars" android:textAlignment="center"
+            <TextView android:background="@drawable/shadow" android:textStyle="bold" android:translationZ="2.0dip" android:elevation="10.0dip" android:textSize="27.0dip" android:textColor="#000" android:id="@+id/wednesday" android:padding="20.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_margin="10.0dip" android:text="WEDNESDAY" android:layout_below="@id/tuesdayCars" android:textAlignment="textStart" tools:ignore="RtlCompat"
                 android:gravity="center_horizontal" />
             <androidx.recyclerview.widget.RecyclerView android:id="@+id/wednesdayCars" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_below="@id/wednesday" />
-            <TextView android:textSize="27.0dip" android:textColor="@color/colorAccent" android:id="@+id/thursday" android:padding="20.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_margin="10.0dip" android:text="THURSDAY" android:layout_below="@id/wednesdayCars" android:textAlignment="center"
+            <TextView android:background="@drawable/shadow" android:textStyle="bold" android:translationZ="2.0dip" android:elevation="10.0dip" android:textSize="27.0dip" android:textColor="#000" android:id="@+id/thursday" android:padding="20.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_margin="10.0dip" android:text="THURSDAY" android:layout_below="@id/wednesdayCars" android:textAlignment="textStart" tools:ignore="RtlCompat"
                 android:gravity="center_horizontal" />
             <androidx.recyclerview.widget.RecyclerView android:id="@+id/thursdayCars" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_below="@id/thursday" />
-            <TextView android:textSize="27.0dip" android:textColor="@color/colorAccent" android:id="@+id/friday" android:padding="20.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_margin="10.0dip" android:text="FRIDAY" android:layout_below="@id/thursdayCars" android:textAlignment="center"
+            <TextView android:background="@drawable/shadow" android:textStyle="bold" android:translationZ="2.0dip" android:elevation="10.0dip" android:textSize="27.0dip" android:textColor="#000" android:id="@+id/friday" android:padding="20.0dip" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_margin="10.0dip" android:text="FRIDAY" android:layout_below="@id/thursdayCars" android:textAlignment="textStart" tools:ignore="RtlCompat"
                 android:gravity="center_horizontal" />
             <androidx.recyclerview.widget.RecyclerView android:id="@+id/fridayCars" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_below="@id/friday" />
         </RelativeLayout>
     </ScrollView>
+
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
     <TextView android:textSize="20.0sp" android:textStyle="bold" android:textColor="#ff00171f" android:gravity="center" android:id="@id/workComplete" android:visibility="gone" android:layout_width="100.0dip" android:layout_height="70.0dip" android:text="NO More Duties availiable" android:layout_centerInParent="true" />
     <ImageView android:id="@id/scanner" android:background="@drawable/circular_shape_for_views" android:padding="15.0dip" android:visibility="gone" android:layout_width="60.0dip" android:layout_height="60.0dip" android:layout_margin="30.0dip" android:layout_marginBottom="30.0dip" android:src="@drawable/ic_scan_icon" android:layout_alignParentRight="true" android:layout_alignParentBottom="true" android:layout_alignParentEnd="true" />
 </RelativeLayout>

@@ -3,6 +3,7 @@ package com.example.cmotoemployee.EmployeeActivities;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -22,6 +23,7 @@ import java.util.Calendar;
 import java.util.HashSet;
 
 public class ImageUploadedActivity extends AppCompatActivity {
+    private static final String TAG = "ImageUploadedActivity";
     private FirebaseAuth auth;
 
     private TextView carsDone;
@@ -43,16 +45,17 @@ public class ImageUploadedActivity extends AppCompatActivity {
             this.employee = "Employee";
         }
         this.auth = FirebaseAuth.getInstance();
-        this.reference = FirebaseDatabase.getInstance().getReference();
+        reference = FirebaseDatabase.getInstance().getReference();
         this.goToList = (Button)findViewById(R.id.gotToCarList);
         this.carsRemaining = (TextView)findViewById(R.id.carsRemaining);
         this.carsDone = (TextView)findViewById(R.id.carsDone);
-        this.reference.child(this.employee).child(this.auth.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
+        reference.child(this.employee).child(auth.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
             public void onCancelled(DatabaseError param1DatabaseError) {}
 
             public void onDataChange(DataSnapshot param1DataSnapshot) {
-                if (param1DataSnapshot != null) {
-                    ArrayList<String> arrayList = new ArrayList(Arrays.asList((Object[])((String)param1DataSnapshot.child("todaysCars").getValue()).split("\\s*,\\s*")));
+                Log.d(TAG, "onDataChange: " + param1DataSnapshot.getValue());
+                if (param1DataSnapshot.getValue() != null) {
+                    ArrayList<String> arrayList = new ArrayList(Arrays.asList((Object[])((String)param1DataSnapshot.child("todaysCars").getValue()).trim().split("\\s*,\\s*")));
                     HashSet<String> hashSet = new HashSet(arrayList);
                     arrayList.clear();
                     arrayList.addAll(hashSet);
@@ -76,14 +79,8 @@ public class ImageUploadedActivity extends AppCompatActivity {
                 } else {
                     ImageUploadedActivity.this.startActivity(new Intent((Context)ImageUploadedActivity.this, HomeActivity.class));
                 }
-                ImageUploadedActivity.this.finish();
+//                ImageUploadedActivity.this.finish();
             }
         });
     }
 }
-
-
-/* Location:              C:\Users\sahil\Desktop\apkExtract\dex-tools-2.1-20171001-lanchon\classes-dex2jar.jar!\com\example\cmotoemployee\EmployeeActivities\ImageUploadedActivity.class
- * Java compiler version: 8 (52.0)
- * JD-Core Version:       1.1.3
- */

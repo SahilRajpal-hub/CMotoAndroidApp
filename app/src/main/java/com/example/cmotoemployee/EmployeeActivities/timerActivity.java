@@ -20,26 +20,31 @@ public class timerActivity extends AppCompatActivity {
 
     private TextView textTimer;
 
-    private void startTimer(final float minuti, float paramFloat2) {
-        this.countDownTimer = (new CountDownTimer((long)(60.0F * minuti * 1000.0F), 500L) {
-            float progress = 0.0F;
+    private void startTimer(final float minutes, float paramFloat2) {
+        this.countDownTimer = (new CountDownTimer((long)(60 * minutes * 1000), 500) {
+            float progress = 0;
 
             public void onFinish() {
-                timerActivity.this.textTimer.setText("00:00");
-                timerActivity.this.barTimer.setProgress(100);
-                Intent intent = new Intent((Context)timerActivity.this, UploadImagesActivity.class);
-                intent.putExtra("carNumber", timerActivity.this.getIntent().getStringExtra("carNumber"));
-                intent.putExtra("area", timerActivity.this.getIntent().getStringExtra("area"));
-                if (timerActivity.this.getIntent().hasExtra("interior"))
-                    intent.putExtra("interior", "interior");
-                timerActivity.this.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK));
+                if(!textTimer.getText().toString().equals("00")){
+                    timerActivity.this.textTimer.setText("00");
+                    timerActivity.this.barTimer.setProgress(100);
+                    Intent intent = new Intent((Context)timerActivity.this, UploadImagesActivity.class);
+                    intent.putExtra("carNumber", timerActivity.this.getIntent().getStringExtra("carNumber"));
+                    intent.putExtra("area", timerActivity.this.getIntent().getStringExtra("area"));
+                    if (timerActivity.this.getIntent().hasExtra("interior"))
+                        intent.putExtra("interior", "interior");
+                    timerActivity.this.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK));
+                    finish();
+                }
+
             }
 
             public void onTick(long param1Long) {
-                param1Long /= 1000L;
-                this.progress = (float)param1Long / minuti * 60.0F * 100.0F;
-                timerActivity.this.barTimer.setProgress((int)this.progress);
-                timerActivity.this.textTimer.setText(String.format("%02d", new Object[] { Long.valueOf(param1Long / 60L) }) + ":" + String.format("%02d", new Object[] { Long.valueOf(param1Long % 60L) }));
+                long seconds = param1Long / 1000;
+                progress = (((float)seconds/(minutes*60))*100);
+                Log.d(TAG, "onTick: seconds : " + seconds + " progress " + progress);
+                barTimer.setProgress((int)this.progress);
+                textTimer.setText(String.format("%02d", seconds/60) + ":" + String.format("%02d", seconds%60));
             }
         }).start();
     }

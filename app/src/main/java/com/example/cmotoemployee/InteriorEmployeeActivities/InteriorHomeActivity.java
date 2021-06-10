@@ -13,6 +13,8 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.navigation.ui.AppBarConfiguration;
@@ -28,6 +30,7 @@ import com.example.cmotoemployee.EmployeeActivities.ProfileActivity;
 import com.example.cmotoemployee.ErrorHandler.CrashHandler;
 import com.example.cmotoemployee.Model.CarListItem;
 import com.example.cmotoemployee.R;
+import com.google.firebase.FirebaseError;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -35,7 +38,8 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.nostra13.universalimageloader.utils.L;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -46,11 +50,12 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 public class InteriorHomeActivity extends AppCompatActivity implements DroidListener {
     private static final String TAG = "InteriorHomeActivity";
 
-    private String Area = "";
+    private HashMap<String,String> Area;
 
     private String WorkingOn = "";
 
@@ -77,6 +82,8 @@ public class InteriorHomeActivity extends AppCompatActivity implements DroidList
     private TextView friday;
 
     private RecyclerView fridayCars;
+
+    private SwipeRefreshLayout refreshLayout;
 
     private ImageView instagram;
 
@@ -144,6 +151,8 @@ public class InteriorHomeActivity extends AppCompatActivity implements DroidList
 
     private TextView workingComplete;
 
+    private int carsRemaining = 0;
+
 
 
     public void menuVisibility(boolean paramBoolean) {
@@ -197,6 +206,7 @@ public class InteriorHomeActivity extends AppCompatActivity implements DroidList
         this.termsAndCondition = (TextView)findViewById(R.id.termsAndCondition);
         this.contactUs = (TextView)findViewById(R.id.contactUs);
         this.aboutUs = (TextView)findViewById(R.id.aboutUs);
+        refreshLayout = (SwipeRefreshLayout)findViewById(R.id.refresh);
         this.logout = (TextView)findViewById(R.id.logout);
         this.progressBar.setVisibility(View.VISIBLE);
         Toolbar toolbar = (Toolbar)findViewById(R.id.toolbar);
@@ -211,6 +221,7 @@ public class InteriorHomeActivity extends AppCompatActivity implements DroidList
         this.remainingCars = (TextView)findViewById(R.id.remaining);
         this.workingComplete = (TextView)findViewById(R.id.workComplete);
         this.recyclerView = (RecyclerView)findViewById(R.id.recyclerView);
+        Area = new HashMap<>();
 
 
         this.monday = (TextView)findViewById(R.id.monday);
@@ -379,6 +390,34 @@ public class InteriorHomeActivity extends AppCompatActivity implements DroidList
                 }
             }
         });
+
+        refreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            public void onRefresh() {
+                carsRemaining=0;
+                carsDone=0;
+                String str = (new SimpleDateFormat("yyyy-MM-dd")).format(Calendar.getInstance().getTime());
+                FirebaseDatabase.getInstance().getReference().child("InteriorEmployee").child(FirebaseAuth.getInstance().getUid()).child("Interior Work History").child(str).addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull @NotNull DataSnapshot snapshot) {
+                        if(snapshot.exists()){
+                            Log.d(TAG, "onDataChange: snapshot : " + snapshot.getChildrenCount());
+                            carsCleaned.setText((int) snapshot.getChildrenCount() + "\n" + "done");
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull @NotNull DatabaseError error) {
+
+                    }
+                });
+                receiveData("mondayCars", mondayCars);
+                receiveData("tuesdayCars", tuesdayCars);
+                receiveData("wednesdayCars", wednesdayCars);
+                receiveData("thursdayCars", thursdayCars);
+                receiveData("fridayCars", fridayCars);
+
+            }
+        });
     }
 
     protected void onDestroy() {
@@ -397,15 +436,31 @@ public class InteriorHomeActivity extends AppCompatActivity implements DroidList
             this.isConnected = true;
         } else {
             Log.d("InteriorHomeActivity", "onInternetConnectivityChanged: INTERNET lost in HomeActivity");
-            this.isConnected = false;
-            this.recyclerView.setVisibility(View.GONE);
-            this.scanner.setVisibility(View.GONE);
-            this.progressBar.setVisibility(View.GONE);
+//            this.isConnected = false;
+//            this.recyclerView.setVisibility(View.GONE);
+//            this.scanner.setVisibility(View.GONE);
+//            this.progressBar.setVisibility(View.GONE);
             Toast.makeText((Context)this, "Internet Connection Lost", Toast.LENGTH_SHORT).show();
         }
     }
 
     public void receiveData(final String dayCars, final RecyclerView recyclerView) {
+
+        String str = (new SimpleDateFormat("yyyy-MM-dd")).format(Calendar.getInstance().getTime());
+        FirebaseDatabase.getInstance().getReference().child("InteriorEmployee").child(FirebaseAuth.getInstance().getUid()).child("Interior Work History").child(str).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull @NotNull DataSnapshot snapshot) {
+                if(snapshot.exists()){
+                    Log.d(TAG, "onDataChange: snapshot : " + snapshot.getChildrenCount());
+                    carsCleaned.setText((int) snapshot.getChildrenCount() + "\n" + "done");
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull @NotNull DatabaseError error) {
+
+            }
+        });
         ArrayList arrayList1 = new ArrayList();
         final ArrayList carsModel = new ArrayList();
         final HashMap<String, String> carsPhoto = new HashMap<>();
@@ -420,9 +475,9 @@ public class InteriorHomeActivity extends AppCompatActivity implements DroidList
             public void onDataChange(DataSnapshot param1DataSnapshot) {
                 if (param1DataSnapshot != null) {
                     String str = (new SimpleDateFormat("yyyy-MM-dd")).format(Calendar.getInstance().getTime());
-                    Log.d("InteriorHomeActivity", "onDataChange: we got this cars : " + dayCars + param1DataSnapshot.getValue());
+                    Log.d("InteriorHomeActivity", "onDataChange: we got this cars : " + dayCars + param1DataSnapshot.child(dayCars).getValue());
                     todayCars = (String)param1DataSnapshot.child(dayCars).getValue();
-                    Area = (String)param1DataSnapshot.child("Working_Address").getValue();
+//                    Area = (String)param1DataSnapshot.child("Working_Address").getValue();
                     if (param1DataSnapshot.child("working on").getValue() != null)
                          param1DataSnapshot.child("working on").getValue().toString();
                     if (param1DataSnapshot.child("Work History").child(str).child("paidOn").exists()) {
@@ -431,8 +486,8 @@ public class InteriorHomeActivity extends AppCompatActivity implements DroidList
                         carsDone = (int)param1DataSnapshot.child("Work History").child(str).getChildrenCount() - 1;
                     }
                     if (InteriorHomeActivity.this.todayCars != null) {
-                        ArrayList[] carsToBeWashed = new ArrayList[0];
-                        carsToBeWashed[0] = new ArrayList(Arrays.asList((Object[])InteriorHomeActivity.this.todayCars.trim().split("\\s*,\\s*")));
+                        ArrayList[] carsToBeWashed = new ArrayList[1];
+                        carsToBeWashed[0] = new ArrayList(Arrays.asList(InteriorHomeActivity.this.todayCars.trim().split("\\s*,\\s*")));
                         HashSet<?> hashSet = new HashSet(carsToBeWashed[0]);
                         carsToBeWashed[0].clear();
                         carsToBeWashed[0].addAll(hashSet);
@@ -441,14 +496,24 @@ public class InteriorHomeActivity extends AppCompatActivity implements DroidList
                         Log.d("InteriorHomeActivity", "Area  " + InteriorHomeActivity.this.Area);
                         if (carsToBeWashed[0].size() == 0) {
                             recyclerView.setVisibility(View.GONE);
-                            InteriorHomeActivity.this.scanner.setVisibility(View.GONE);
-                            InteriorHomeActivity.this.workingComplete.setVisibility(View.VISIBLE);
-                            InteriorHomeActivity.this.progressBar.setVisibility(View.GONE);
                         }
-                        for (byte finalI = 0; finalI < carsToBeWashed[0].size(); finalI++) {
-                            DatabaseReference databaseReference = InteriorHomeActivity.this.reference.child("cars").child(InteriorHomeActivity.this.Area).child((String) carsToBeWashed[0].get(finalI));
+
+                        readData(carsToBeWashed[0], new OnGetListener() {
+                            @Override
+                            public void onStart() {
+                                Log.d(TAG, "onStart: carstobewashed : " + carsToBeWashed[0].toString());
+                                Log.d(TAG, "onStart: readData called");
+                            }
+
+                            @Override
+                            public void onSuccess() {
+
+
+
+                        for (int finalI = 0; finalI < carsToBeWashed[0].size(); finalI++) {
+                            DatabaseReference databaseReference = InteriorHomeActivity.this.reference.child("cars").child(Area.get(carsToBeWashed[0].get(finalI))).child((String) carsToBeWashed[0].get(finalI));
                             Log.d("InteriorHomeActivity", "onDataChange: area = " + InteriorHomeActivity.this.Area + " car = " + (String)carsToBeWashed[0].get(finalI));
-                            byte finalI1 = finalI;
+                            int finalI1 = finalI;
                             databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
                                 public void onCancelled(DatabaseError param2DatabaseError) {
                                     InteriorHomeActivity.this.progressBar.setVisibility(View.GONE);
@@ -463,14 +528,21 @@ public class InteriorHomeActivity extends AppCompatActivity implements DroidList
                                             StringBuilder stringBuilder = new StringBuilder();
 //                                            this();
                                             Log.d("InteriorHomeActivity", stringBuilder.append("onDataChange: car : ").append(param2DataSnapshot.child("model")).toString());
-                                            carsModel.add((String)param2DataSnapshot.child("model").getValue());
-                                            carsPhoto.put(carsToBeWashed[0].get(finalI1).toString(), param2DataSnapshot.child("photo").getValue().toString());
-                                            leaveTimeList.add((String)param2DataSnapshot.child("leaveTime").getValue());
-                                            houseNumberList.add((Long)param2DataSnapshot.child("houseNumber").getValue());
+                                            if(!param2DataSnapshot.child("Active").getValue().toString().equals("1")){
+                                                carsToBeWashed[0].remove(finalI1);
+                                            }else {
+                                                carsModel.add((String) param2DataSnapshot.child("model").getValue());
+                                                carsPhoto.put(carsToBeWashed[0].get(finalI1).toString(), param2DataSnapshot.child("photo").getValue().toString());
+                                                leaveTimeList.add((String) param2DataSnapshot.child("leaveTime").getValue());
+                                                houseNumberList.add((Long) param2DataSnapshot.child("houseNumber").getValue());
+                                            }
                                         }
                                     } catch (Exception exception) {
                                         Log.d("InteriorHomeActivity", "onDataChange: error : " + exception.getMessage());
                                         Toast.makeText((Context)InteriorHomeActivity.this, "error " + exception.getMessage(), Toast.LENGTH_SHORT).show();
+                                    }
+                                    if (refreshLayout.isRefreshing()) {
+                                        refreshLayout.setRefreshing(false);
                                     }
                                     Log.d("InteriorHomeActivity", "onDataChange: model : " + carsModel + "photo : " + carsPhoto);
                                     Log.d("InteriorHomeActivity", "onDataChange: " + carsToBeWashed[0].size() + " : " + carsModel.size());
@@ -480,20 +552,64 @@ public class InteriorHomeActivity extends AppCompatActivity implements DroidList
                                             carsToBeWashed[0].remove(InteriorHomeActivity.this.WorkingOn);
                                             carsToBeWashed[0].add(0, InteriorHomeActivity.this.WorkingOn);
                                         }
+                                        carsRemaining += carsToBeWashed[0].size();
                                         InteriorHomeActivity.this.setAdapter(recyclerView, carsToBeWashed[0], carsModel, carsPhoto, houseNumberList, leaveTimeList, dayCars);
                                         InteriorHomeActivity.this.progressBar.setVisibility(View.GONE);
                                     }
                                 }
                             });
                         }
+
+                            }
+
+                            @Override
+                            public void onFailed(DatabaseError databaseError) {
+
+                            }
+                        });
                     }
                 }
             }
         });
     }
 
+    public void readData(ArrayList<String> carsToBeWashed,final OnGetListener listener) {
+        listener.onStart();
+        getAreas(carsToBeWashed,listener);
+
+    }
+
+    public void getAreas(ArrayList<String> carsToBeWashed,OnGetListener listener){
+        Log.d(TAG, "getAreas: function called");
+
+        Log.d(TAG, "getAreas: carsTobeWadhed : " + carsToBeWashed.toString());
+        for(int carIndex=0; carIndex<carsToBeWashed.size(); carIndex++){
+            int finalCarIndex = carIndex;
+            Log.d(TAG, "getAreas: car : " + carsToBeWashed.get(carIndex));
+            reference.child("Car Status").child((String) carsToBeWashed.get(carIndex)).child("Working_Address").addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull @NotNull DataSnapshot snapshot) {
+                    if(snapshot.exists()) {
+                        Area.put((String) carsToBeWashed.get(finalCarIndex), snapshot.getValue().toString());
+                        Log.d(TAG, "onDataChange: done : " + finalCarIndex + " : " + carsToBeWashed.size());
+                        if (finalCarIndex == carsToBeWashed.size() - 1) {
+                            listener.onSuccess();
+                        }
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull @NotNull DatabaseError error) {
+
+                }
+            });
+        }
+
+    }
+
     public void setAdapter(RecyclerView paramRecyclerView, List<String> paramList1, List<String> paramList2, HashMap<String, String> paramHashMap, List<Long> paramList, List<String> paramList3, String paramString) {
         Log.d("InteriorHomeActivity", "setAdapter: setAdapter function called");
+        remainingCars.setText(carsRemaining+" " + "\n" + "remaining");
         ArrayList<CarListItem> arrayList = new ArrayList();
         for (byte b = 0; b < paramList2.size(); b++)
             arrayList.add(new CarListItem(paramList1.get(b), paramList2.get(b), paramHashMap.get(paramList1.get(b)), paramList.get(b), paramList3.get(b)));
@@ -502,7 +618,7 @@ public class InteriorHomeActivity extends AppCompatActivity implements DroidList
                 return param1CarListItem1.getHouseNumber().compareTo(param1CarListItem2.getHouseNumber());
             }
         });
-        this.adapter = new RecyclerViewAdapter(arrayList, (Context)this, this.Area, "interior", paramString);
+        this.adapter = new RecyclerViewAdapter(arrayList, (Context)this, Area, "interior", paramString);
         paramRecyclerView.setHasFixedSize(true);
         paramRecyclerView.setMotionEventSplittingEnabled(false);
         paramRecyclerView.setNestedScrollingEnabled(false);
@@ -512,6 +628,12 @@ public class InteriorHomeActivity extends AppCompatActivity implements DroidList
         paramRecyclerView.setAdapter((RecyclerView.Adapter)this.adapter);
         this.adapter.notifyDataSetChanged();
     }
+}
+
+interface OnGetListener {
+    public void onStart();
+    public void onSuccess();
+    public void onFailed(DatabaseError databaseError);
 }
 
 

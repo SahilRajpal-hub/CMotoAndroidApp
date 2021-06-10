@@ -7,13 +7,16 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
 
     <application
         android:allowBackup="true"
-        android:icon="@drawable/app_logo"
+        android:icon="@mipmap/ic_app_logo"
         android:label="@string/app_name"
-        android:roundIcon="@drawable/app_logo"
+        android:roundIcon="@mipmap/ic_app_logo"
         android:supportsRtl="true"
+        android:requestLegacyExternalStorage="true"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar">
 
         <activity
@@ -34,6 +37,18 @@
         <activity
             android:name=".EmployeeActivities.PaymentActivity"
             android:screenOrientation="portrait" />
+        <activity
+            android:name=".InteriorEmployeeActivities.InteriorHomeActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".InteriorEmployeeActivities.InteriorPaymentActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".CollectPaymentActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".OtpProcessingActivity"
+            android:screenOrientation="portrait" />
 
         <!--
              The API key for Google Maps-based APIs is defined as a string resource.
@@ -53,6 +68,7 @@
             android:screenOrientation="portrait" />
         <activity
             android:name=".EmployeeActivities.QRCodeScanning"
+            android:excludeFromRecents="true"
             android:screenOrientation="portrait" />
         <activity
             android:name=".EmployeeActivities.StartCarCleaningActivity"

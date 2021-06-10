@@ -14,6 +14,8 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.navigation.ui.AppBarConfiguration;
@@ -70,6 +72,7 @@ public class HomeActivity extends AppCompatActivity implements DroidListener {
     private HashMap<String, String> carsPhoto;
 
     private List<String> carsToBeWashed;
+    private List<String> deactivatedCars;
 
     private TextView contactUs;
 
@@ -207,6 +210,7 @@ public class HomeActivity extends AppCompatActivity implements DroidListener {
         this.workingComplete = (TextView)findViewById(R.id.workComplete);
         this.recyclerView = (RecyclerView)findViewById(R.id.recyclerView);
         this.carsToBeWashed = new ArrayList<>();
+        this.deactivatedCars = new ArrayList<>();
         this.carsModel = new ArrayList<>();
         this.carsPhoto = new HashMap<>();
         this.houseNumberList = new ArrayList<>();
@@ -222,11 +226,14 @@ public class HomeActivity extends AppCompatActivity implements DroidListener {
         }
         if (!this.isConnected)
             Toast.makeText((Context)this, "Internet connection lost", Toast.LENGTH_SHORT).show();
-        this.reference.child("Employee").child(this.mAuth.getUid()).child("Name").addListenerForSingleValueEvent(new ValueEventListener() {
+        this.reference.child("Employee").child(this.mAuth.getUid()).addValueEventListener(new ValueEventListener() {
             public void onCancelled(DatabaseError param1DatabaseError) {}
 
             public void onDataChange(DataSnapshot param1DataSnapshot) {
-                HomeActivity.this.name.setText(param1DataSnapshot.getValue().toString());
+                String date = new SimpleDateFormat("yyyy-MM-dd").format(Calendar.getInstance().getTime());
+                HomeActivity.this.name.setText(param1DataSnapshot.child("Name").getValue().toString());
+                carsDone = (int) param1DataSnapshot.child("Work History").child(date).getChildrenCount();
+                carsDone = carsDone==0 ? carsDone : carsDone-1;
             }
         });
         this.menuOptions.setOnClickListener(new View.OnClickListener() {
@@ -345,12 +352,14 @@ public class HomeActivity extends AppCompatActivity implements DroidListener {
         this.refreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             public void onRefresh() {
                 carsToBeWashed = new ArrayList<>();
+                deactivatedCars = new ArrayList<>();
                 carsModel = new ArrayList<>();
                 carsPhoto = new HashMap<>();
                 houseNumberList = new ArrayList<>();
                 leaveTimeList = new ArrayList<>();
                 carItems = new ArrayList<>();
                 HomeActivity.this.receiveData();
+//                refreshLayout.setRefreshing(false);
             }
         });
     }
@@ -383,6 +392,8 @@ public class HomeActivity extends AppCompatActivity implements DroidListener {
         }
     }
 
+
+
     public void receiveData() {
         this.reference.child("Employee").child(this.mAuth.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
             public void onCancelled(DatabaseError param1DatabaseError) {
@@ -394,8 +405,7 @@ public class HomeActivity extends AppCompatActivity implements DroidListener {
                 if (param1DataSnapshot != null) {
                     String str = (new SimpleDateFormat("yyyy-MM-dd")).format(Calendar.getInstance().getTime());
                     Log.d("HomeActivity", "onDataChange: we got this cars : " + param1DataSnapshot.child("todaysCars").getValue());
-//                    HomeActivity.access$1202(HomeActivity.this, (String)param1DataSnapshot.child("todaysCars").getValue());
-//                    HomeActivity.access$502(HomeActivity.this, (String)param1DataSnapshot.child("Working_Address").getValue());
+
                     todayCars = (String)param1DataSnapshot.child("todaysCars").getValue();
                     Area = (String)param1DataSnapshot.child("Working_Address").getValue();
                     if (param1DataSnapshot.child("working on").getValue() != null)
@@ -419,9 +429,10 @@ public class HomeActivity extends AppCompatActivity implements DroidListener {
                             HomeActivity.this.scanner.setVisibility(View.GONE);
                             HomeActivity.this.workingComplete.setVisibility(View.GONE);
                             HomeActivity.this.progressBar.setVisibility(View.GONE);
-                            HomeActivity.this.remainingCars.setText("remaining\n0");
+                            HomeActivity.this.remainingCars.setText("remaining\n");
                             HomeActivity.this.carsCleaned.setText("done\n" + HomeActivity.this.carsDone);
                         }
+
                         for (byte finalI = 0; finalI < HomeActivity.this.carsToBeWashed.size(); finalI++) {
                             byte finalI1 = finalI;
                             HomeActivity.this.reference.child("cars").child(HomeActivity.this.Area).child(HomeActivity.this.carsToBeWashed.get(finalI)).addListenerForSingleValueEvent(new ValueEventListener() {
@@ -438,18 +449,27 @@ public class HomeActivity extends AppCompatActivity implements DroidListener {
                                             StringBuilder stringBuilder = new StringBuilder();
 //                                            this();
                                             Log.d("HomeActivity", stringBuilder.append("onDataChange: car : ").append(param2DataSnapshot.child("model")).toString());
-                                            HomeActivity.this.carsModel.add((String)param2DataSnapshot.child("model").getValue());
-                                            HomeActivity.this.carsPhoto.put(HomeActivity.this.carsToBeWashed.get(finalI1), param2DataSnapshot.child("photo").getValue().toString());
-                                            HomeActivity.this.leaveTimeList.add((String)param2DataSnapshot.child("leaveTime").getValue());
-                                            HomeActivity.this.houseNumberList.add((Long)param2DataSnapshot.child("houseNumber").getValue());
+                                            if(!param2DataSnapshot.child("Active").getValue().toString().equals("1")){
+                                                deactivatedCars.add(carsToBeWashed.get(finalI1));
+                                            }else{
+
+                                                HomeActivity.this.carsModel.add((String)param2DataSnapshot.child("model").getValue());
+                                                HomeActivity.this.carsPhoto.put(HomeActivity.this.carsToBeWashed.get(finalI1), param2DataSnapshot.child("photo").getValue().toString());
+                                                HomeActivity.this.leaveTimeList.add((String)param2DataSnapshot.child("leaveTime").getValue());
+                                                HomeActivity.this.houseNumberList.add((Long)param2DataSnapshot.child("houseNumber").getValue());
+                                            }
+
                                         }
                                     } catch (Exception exception) {
                                         Log.d("HomeActivity", "onDataChange: error : " + exception.getMessage());
                                         Toast.makeText((Context)HomeActivity.this, "error " + exception.getMessage(), Toast.LENGTH_SHORT).show();
                                     }
+                                    if (refreshLayout.isRefreshing()) {
+                                        refreshLayout.setRefreshing(false);
+                                    }
                                     Log.d("HomeActivity", "onDataChange: model : " + HomeActivity.this.carsModel + "photo : " + HomeActivity.this.carsPhoto);
                                     Log.d("HomeActivity", "onDataChange: " + HomeActivity.this.carsToBeWashed.size() + " : " + HomeActivity.this.carsModel.size());
-                                    if (HomeActivity.this.carsModel.size() == HomeActivity.this.carsToBeWashed.size()) {
+                                    if ((HomeActivity.this.houseNumberList.size()+deactivatedCars.size()) == HomeActivity.this.carsToBeWashed.size()) {
                                         Log.d("HomeActivity", "onDataChange: setting adapter");
                                         if (HomeActivity.this.carsToBeWashed.contains(HomeActivity.this.WorkingOn) && HomeActivity.this.carsToBeWashed.indexOf(HomeActivity.this.WorkingOn) != 0) {
                                             HomeActivity.this.carsToBeWashed.remove(HomeActivity.this.WorkingOn);
@@ -461,13 +481,16 @@ public class HomeActivity extends AppCompatActivity implements DroidListener {
                                 }
                             });
                         }
+                        refreshLayout.setRefreshing(false);
                     }
                 }
+                refreshLayout.setRefreshing(false);
             }
         });
     }
 
     public void setAdapter() {
+        carsToBeWashed.removeAll(deactivatedCars);
         Log.d("HomeActivity", "setAdapter: carsTobeWashed : " + this.carsToBeWashed.size());
         Log.d("HomeActivity", "setAdapter: carsModel : " + this.carsModel.size());
         Log.d("HomeActivity", "setAdapter: carsPhoto : " + this.carsPhoto.size());
@@ -476,7 +499,7 @@ public class HomeActivity extends AppCompatActivity implements DroidListener {
         Log.d("HomeActivity", "setAdapter: setAdapter function called");
         this.remainingCars.setText(this.carsToBeWashed.size() + "\nRemaining");
         this.carsCleaned.setText(this.carsDone + "\nDone");
-        for (byte b = 0; b < this.carsModel.size(); b++) {
+        for (byte b = 0; b < this.carsPhoto.size(); b++) {
             CarListItem carListItem = new CarListItem(this.carsToBeWashed.get(b), this.carsModel.get(b), this.carsPhoto.get(this.carsToBeWashed.get(b)), this.houseNumberList.get(b), this.leaveTimeList.get(b));
             this.carItems.add(carListItem);
         }

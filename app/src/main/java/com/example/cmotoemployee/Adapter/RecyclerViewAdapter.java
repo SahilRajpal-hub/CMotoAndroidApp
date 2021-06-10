@@ -2,6 +2,8 @@ package com.example.cmotoemployee.Adapter;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
 import android.os.CountDownTimer;
 import android.os.SystemClock;
 import android.util.Log;
@@ -30,12 +32,14 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder> {
     private static final String TAG = "RecyclerViewAdapter";
 
     private String Area;
+    private HashMap<String,String> AreaKey;
 
     private boolean Connected = true;
 
@@ -48,6 +52,8 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     private String daysCar;
 
     private String employeeType;
+    GradientDrawable gd = new GradientDrawable();
+
 
     private boolean isInterior = false;
 
@@ -73,16 +79,17 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         }
     }
 
-    public RecyclerViewAdapter(List<CarListItem> paramList, Context paramContext, String paramString1, String paramString2, String paramString3) {
+    public RecyclerViewAdapter(List<CarListItem> paramList, Context paramContext, HashMap<String,String> paramString1, String paramString2, String paramString3) {
         this.carItems = paramList;
         this.context = paramContext;
-        this.Area = paramString1;
+        this.Area = paramString1.get(carItems.get(0));
         this.daysCar = paramString3;
         if (paramString2.equals("interior")) {
             Log.d("RecyclerViewAdapter", "RecyclerViewAdapter: employeeType : interior");
             this.isInterior = true;
             this.employeeType = "InteriorEmployee";
             this.status = "Interior Cleaning status";
+            this.AreaKey = paramString1;
         } else {
             this.employeeType = "Employee";
             this.status = "status";
@@ -90,26 +97,20 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     }
 
     private boolean isPaid(String paramString) {
-        Date date1;
-        Date date2 = null;
-        Date date3 = new Date();
-        Date date4 = Calendar.getInstance().getTime();
+        if(paramString.equals("")) return true;
+        Date lastPaid = null;
+        Date presentDate = Calendar.getInstance().getTime();
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
         try {
-            date1 = simpleDateFormat.parse(paramString);
-            date2 = date1;
-            date4 = simpleDateFormat.parse(String.valueOf(date4));
-            date2 = date4;
-            date3 = date1;
-            date1 = date2;
+            lastPaid = simpleDateFormat.parse(paramString);
+            presentDate = simpleDateFormat.parse(String.valueOf(presentDate));
         } catch (ParseException parseException) {
             Log.d("RecyclerViewAdapter", "isPaid: error : " + parseException.getMessage());
-            date1 = date3;
-            date3 = date2;
+
         }
-        Log.d("RecyclerViewAdapter", "isPaid: paid date :  month : " + date3.getMonth());
-        Log.d("RecyclerViewAdapter", "isPaid: todays date : " + date1.getMonth());
-        return (date3.getMonth() == date1.getMonth());
+        Log.d("RecyclerViewAdapter", "isPaid: paid date :  month : " + presentDate);
+        Log.d("RecyclerViewAdapter", "isPaid: todays date : " + lastPaid);
+        return (presentDate.getMonth() == lastPaid.getMonth());
     }
 
     public int getItemCount() {
@@ -125,6 +126,8 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     }
 
     public void onBindViewHolder(final ViewHolder holder, final int position) {
+        gd.setColor(context.getResources().getColor(R.color.colorAccentLight));
+        gd.setCornerRadius(50);
         holder.CarNumber.setText(((CarListItem)this.carItems.get(position)).getNumber());
         holder.carName.setText(((CarListItem)this.carItems.get(position)).getModel());
         if (this.isInterior)
@@ -142,8 +145,9 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                 }
             });
         if (((CarListItem)this.carItems.get(position)).getLeaveTime().equals("Before 6am") || ((CarListItem)this.carItems.get(position)).getLeaveTime().equals("7am-8am") || ((CarListItem)this.carItems.get(position)).getLeaveTime().equals("6am-7am"))
-            holder.background.setBackgroundColor(ContextCompat.getColor(this.context, R.color.colorAccentLight));
-        Picasso.get().load(((CarListItem)this.carItems.get(position)).getPhoto()).transform((Transformation)new RoundedTransformation(60, 0)).into(holder.CarPhoto);
+            holder.background.setBackgroundDrawable(gd);
+//            holder.background.setBackgroundColor(ContextCompat.getColor(this.context, R.color.colorAccentLight));
+        Picasso.get().load(carItems.get(position).getPhoto()).transform((Transformation)new RoundedTransformation(60, 0)).into(holder.CarPhoto);
         FirebaseDatabase.getInstance().getReference(this.employeeType).child(this.auth.getUid()).child("working on").addValueEventListener(new ValueEventListener() {
             public void onCancelled(DatabaseError param1DatabaseError) {}
 
@@ -164,18 +168,19 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                             } else if (param2DataSnapshot.child("category").getValue().toString().toLowerCase().equals("suv")) {
                                 timerValue[0] = 1;
                             }
-                            Double double_2 = Double.valueOf(param2DataSnapshot.child("timeStamp").getValue().toString());
-                            Double double_1 = Double.valueOf(System.currentTimeMillis());
-                            Log.d("RecyclerViewAdapter", "onDataChange: difference is " + (timerValue[0] - (double_1.doubleValue() - double_2.doubleValue()) / 60000.0D));
-                            (new CountDownTimer((long)((timerValue[0] * 60000) - double_1.doubleValue() - double_2.doubleValue()), 1000L) {
+                            Double timeStamp = Double.valueOf(param2DataSnapshot.child("timeStamp").getValue().toString());
+                            Double currentTimeStamp = Double.valueOf(System.currentTimeMillis());
+                            Log.d("RecyclerViewAdapter", "onDataChange: difference is " + (timerValue[0] - (currentTimeStamp - timeStamp) / 60000.0D));
+                            (new CountDownTimer((long)((long) (60000 * timerValue[0] - (currentTimeStamp - timeStamp))), 1000) {
                                 public void onFinish() {
-                                    holder.timer.setText("Time Finished");
+                                    if (!RecyclerViewAdapter.this.isInterior)
+                                         holder.timer.setText("Time Finished");
                                 }
 
                                 public void onTick(long param3Long) {
-                                    param3Long /= 1000L;
+                                    long seconds = param3Long / 1000;
                                     if (!RecyclerViewAdapter.this.isInterior)
-                                        holder.timer.setText(String.format("%02d", new Object[] { Long.valueOf(param3Long / 60L) }) + ":" + String.format("%02d", new Object[] { Long.valueOf(param3Long % 60L) }));
+                                        holder.timer.setText(String.format("%02d", seconds/60) + ":" + String.format("%02d", seconds%60));
                                 }
                             }).start();
                         }
@@ -186,10 +191,10 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             public void onClick(View param1View) {
                 DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference().child(RecyclerViewAdapter.this.employeeType).child(RecyclerViewAdapter.this.auth.getUid()).child("working on");
-                if (!Connected) {
-                    Toast.makeText(RecyclerViewAdapter.this.context, "No INTERNET connection", Toast.LENGTH_SHORT).show();
-                    return;
-                }
+//                if (!Connected) {
+//                    Toast.makeText(RecyclerViewAdapter.this.context, "No INTERNET connection", Toast.LENGTH_SHORT).show();
+//                    return;
+//                }
                 if (SystemClock.elapsedRealtime() - RecyclerViewAdapter.this.lastClicked < RecyclerViewAdapter.this.toBeWait)
                     return;
                 lastClicked = SystemClock.elapsedRealtime();

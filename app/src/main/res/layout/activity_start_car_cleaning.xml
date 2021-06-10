@@ -42,4 +42,5 @@
             </RelativeLayout>
         </RelativeLayout>
     </ScrollView>
+    <LinearLayout android:orientation="horizontal" android:id="@+id/loadingEffect" android:background="#b0000000" android:visibility="gone" android:layout_width="fill_parent" android:layout_height="fill_parent" />
 </RelativeLayout>

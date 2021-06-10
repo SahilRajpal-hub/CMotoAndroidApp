@@ -84,26 +84,20 @@ public class InteriorPaymentActivity extends AppCompatActivity {
     }
 
     private boolean isPaid(String paramString) {
-        Date date1;
-        Date date2 = null;
-        Date date3 = new Date();
-        Date date4 = Calendar.getInstance().getTime();
+        if(paramString.equals("")) return true;
+        Date lastPaid = null;
+        Date presentDate = Calendar.getInstance().getTime();
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
         try {
-            date1 = simpleDateFormat.parse(paramString);
-            date2 = date1;
-            Date date = simpleDateFormat.parse(String.valueOf(date4));
-            date2 = date;
-            date3 = date1;
-            date1 = date2;
+            lastPaid = simpleDateFormat.parse(paramString);
+            presentDate = simpleDateFormat.parse(String.valueOf(presentDate));
         } catch (ParseException parseException) {
-            Log.d("InteriorPaymentActivity", "isPaid: error : " + parseException.getMessage());
-            date1 = date3;
-            date3 = date2;
+            Log.d("RecyclerViewAdapter", "isPaid: error : " + parseException.getMessage());
+
         }
-        Log.d("InteriorPaymentActivity", "isPaid: paid date :  month : " + date3.getMonth());
-        Log.d("InteriorPaymentActivity", "isPaid: todays date : " + date1.getMonth());
-        return (date3.getMonth() == date1.getMonth());
+        Log.d("RecyclerViewAdapter", "isPaid: paid date :  month : " + presentDate);
+        Log.d("RecyclerViewAdapter", "isPaid: todays date : " + lastPaid);
+        return (presentDate.getMonth() == lastPaid.getMonth());
     }
 
     private void setAdapter(final ArrayList<String> carNumber, final ArrayList<Integer> carPayment) {
@@ -148,18 +142,18 @@ public class InteriorPaymentActivity extends AppCompatActivity {
             public void onCancelled(DatabaseError param1DatabaseError) {}
 
             public void onDataChange(DataSnapshot param1DataSnapshot) {
-                final ArrayList carNumber = new ArrayList();
-                final ArrayList carPayment = new ArrayList();
-                ArrayList arrayList4 = new ArrayList(Arrays.asList((Object[])param1DataSnapshot.child("mondayCars").getValue().toString().trim().split("\\s*,\\s*")));
-                ArrayList arrayList5 = new ArrayList(Arrays.asList((Object[])param1DataSnapshot.child("tuesdayCars").getValue().toString().trim().split("\\s*,\\s*")));
-                ArrayList arrayList6 = new ArrayList(Arrays.asList((Object[])param1DataSnapshot.child("wednesdayCars").getValue().toString().trim().split("\\s*,\\s*")));
-                ArrayList arrayList7 = new ArrayList(Arrays.asList((Object[])param1DataSnapshot.child("thursdayCars").getValue().toString().trim().split("\\s*,\\s*")));
-                ArrayList arrayList1 = new ArrayList(Arrays.asList((Object[])param1DataSnapshot.child("fridayCars").getValue().toString().trim().split("\\s*,\\s*")));
-                InteriorPaymentActivity.this.carNumbers.addAll(arrayList4);
-                InteriorPaymentActivity.this.carNumbers.addAll(arrayList5);
-                InteriorPaymentActivity.this.carNumbers.addAll(arrayList6);
-                InteriorPaymentActivity.this.carNumbers.addAll(arrayList7);
-                InteriorPaymentActivity.this.carNumbers.addAll(arrayList1);
+                final ArrayList<String> carNumber = new ArrayList();
+                final ArrayList<Integer> carPayment = new ArrayList();
+                ArrayList<String> arrayList4 = new ArrayList(Arrays.asList((Object[])param1DataSnapshot.child("mondayCars").getValue().toString().trim().split("\\s*,\\s*")));
+                ArrayList<String> arrayList5 = new ArrayList(Arrays.asList((Object[])param1DataSnapshot.child("tuesdayCars").getValue().toString().trim().split("\\s*,\\s*")));
+                ArrayList<String> arrayList6 = new ArrayList(Arrays.asList((Object[])param1DataSnapshot.child("wednesdayCars").getValue().toString().trim().split("\\s*,\\s*")));
+                ArrayList<String> arrayList7 = new ArrayList(Arrays.asList((Object[])param1DataSnapshot.child("thursdayCars").getValue().toString().trim().split("\\s*,\\s*")));
+                ArrayList<String> arrayList1 = new ArrayList(Arrays.asList((Object[])param1DataSnapshot.child("fridayCars").getValue().toString().trim().split("\\s*,\\s*")));
+                carNumbers.addAll(arrayList4);
+                carNumbers.addAll(arrayList5);
+                carNumbers.addAll(arrayList6);
+                carNumbers.addAll(arrayList7);
+                carNumbers.addAll(arrayList1);
                 Log.d("InteriorPaymentActivity", "onDataChange: check 1 carNumbers : " + InteriorPaymentActivity.this.carNumbers);
 //                InteriorPaymentActivity.access$102(InteriorPaymentActivity.this, Integer.valueOf(0));
                 for (byte finalI = 0; finalI < InteriorPaymentActivity.this.carNumbers.size(); finalI++) {
@@ -169,43 +163,28 @@ public class InteriorPaymentActivity extends AppCompatActivity {
 
                         public void onDataChange(DataSnapshot param2DataSnapshot) {
                             if (param2DataSnapshot.child("lastPaidOn").exists()) {
-                                short s1 = 0;
+
                                 String str = param2DataSnapshot.child("category").getValue().toString().toLowerCase();
-                                short s2 = -1;
+                                int price = 0;
                                 switch (str) {
                                     case "compact sedan":
-                                        s2 = 1;
-                                        break;
                                     case "hatchback":
-                                        s2 = 0;
+                                        price = 100;
                                         break;
                                     case "sedan":
-                                        s2 = 2;
+                                        price = 200;
                                         break;
                                     case "suv":
-                                        s2 = 4;
+                                        price = 300;
                                         break;
                                     case "luv":
-                                        s2 = 3;
                                         break;
                                 }
-                                if (s2 != 0 && s2 != 1) {
-                                    if (s2 != 2 && s2 != 3) {
-                                        if (s2 != 4) {
-                                            s2 = s1;
-                                        } else {
-                                            s2 = 300;
-                                        }
-                                    } else {
-                                        s2 = 200;
-                                    }
-                                } else {
-                                    s2 = 100;
-                                }
+
                                 if (!InteriorPaymentActivity.this.isPaid(param2DataSnapshot.child("lastPaidOn").getValue().toString())) {
                                     carNumber.add(InteriorPaymentActivity.this.carNumbers.get(finalI1));
-                                    carPayment.add(Integer.valueOf(s2));
-                                    totalPrice = Integer.valueOf(InteriorPaymentActivity.this.totalPrice.intValue() + s2);
+                                    carPayment.add(Integer.valueOf(price));
+                                    totalPrice = Integer.valueOf(InteriorPaymentActivity.this.totalPrice.intValue() + price);
                                 }
                                 if (finalI1 == InteriorPaymentActivity.this.carNumbers.size() - 1) {
                                     Log.d("InteriorPaymentActivity", "onDataChange: check 2 carNumber and carpayments final are : -- ");

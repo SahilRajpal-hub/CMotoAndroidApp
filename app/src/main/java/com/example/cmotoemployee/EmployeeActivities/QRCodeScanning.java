@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.SurfaceHolder;
@@ -11,6 +12,9 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import com.example.cmotoemployee.InteriorEmployeeActivities.InteriorHomeActivity;
@@ -19,11 +23,19 @@ import com.google.android.gms.vision.CameraSource;
 import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.text.TextBlock;
 import com.google.android.gms.vision.text.TextRecognizer;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.journeyapps.barcodescanner.CompoundBarcodeView;
 import com.journeyapps.barcodescanner.camera.CameraSettings;
+
+import org.jetbrains.annotations.NotNull;
+
 import java.io.IOException;
+import java.util.ArrayList;
 
 public class QRCodeScanning extends AppCompatActivity {
     private static final String TAG = "QRCodeScanning";
@@ -35,6 +47,8 @@ public class QRCodeScanning extends AppCompatActivity {
     private FirebaseDatabase database;
 
     private String employeeType;
+
+    private Boolean launched = false;
 
     private String employeesType;
 
@@ -57,6 +71,9 @@ public class QRCodeScanning extends AppCompatActivity {
     private TextView textTryAgain;
 
     private String workHistory;
+
+    Handler handler = new Handler();
+    Runnable runnable;
 
     private void startCameraSource() {
         TextRecognizer textRecognizer = (new TextRecognizer.Builder(getApplicationContext())).build();
@@ -84,14 +101,88 @@ public class QRCodeScanning extends AppCompatActivity {
                 }
             });
             textRecognizer.setProcessor(new Detector.Processor<TextBlock>() {
-                public void receiveDetections(Detector.Detections<TextBlock> param1Detections) {
-                    final SparseArray sparseArray = param1Detections.getDetectedItems();
-                    if (sparseArray.size() != 0)
-                        QRCodeScanning.this.mTextView.post(new Runnable() {
-                            public void run() {
+                @Override
+                public void receiveDetections(Detector.Detections<TextBlock> detections) {
+                    final SparseArray<TextBlock> items = detections.getDetectedItems();
+                    if (items.size() != 0 ){
 
+
+
+                        runnable = new Runnable() {
+                            @Override
+                            public void run() {
+                                StringBuilder stringBuilder = new StringBuilder();
+                                for(int i=0;i<items.size();i++){
+                                    TextBlock item = items.valueAt(i);
+                                    stringBuilder.append(item.getValue());
+                                    stringBuilder.append("\n");
+                                }
+                                final String id = new String(stringBuilder.toString());
+                                String carNumber = getIntent().getStringExtra(getString(R.string.carNumber));
+                                Log.d(TAG, "onActivityResult: carNumber : " + carNumber + " coming out :" + id +".");
+                                long timeStamp = System.currentTimeMillis();
+
+                                if(getIntent().hasExtra(getString(R.string.carNumber))) {
+                                    String substring = carNumber.substring(Math.max(carNumber.length() - 5, 0), carNumber.length() - 1);
+                                    if (id.equals(getIntent().getStringExtra(getString(R.string.carNumber))) ||
+                                            carNumber.contains(id) || id.contains(carNumber) || substring.equals(id) || id.contains(substring)) {
+
+                                        handler.removeCallbacks(this);
+                                        reference.child("Car Status").child(carNumber).child("status").addListenerForSingleValueEvent(new ValueEventListener() {
+                                            @Override
+                                            public void onDataChange(@NonNull @NotNull DataSnapshot snapshot) {
+                                                if(!snapshot.getValue().toString().equals("scanned")){
+                                                    reference.child("Car Status").child(carNumber).child("status").setValue("scanned");
+                                                    reference.child("Car Status").child(carNumber).child("timeStamp").setValue(String.valueOf(timeStamp));
+                                                    FirebaseDatabase.getInstance().getReference().child(employeeType).child(FirebaseAuth.getInstance().getUid()).child(status).setValue("working");
+                                                    FirebaseDatabase.getInstance().getReference().child(employeeType).child(FirebaseAuth.getInstance().getUid()).child("working on").setValue(getIntent().getStringExtra(getString(R.string.carNumber)));
+                                                    FirebaseDatabase.getInstance().getReference().child(employeesType).child(getIntent().getStringExtra(getString(R.string.area))).child(FirebaseAuth.getInstance().getUid()).child("working on").setValue(getIntent().getStringExtra(getString(R.string.carNumber)));
+                                                    Intent returnIntent = new Intent().addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                                    Toast.makeText(QRCodeScanning.this, "Car Verified", Toast.LENGTH_SHORT).show();
+                                                    setResult(Activity.RESULT_OK, returnIntent);
+                                                    finish();
+                                                }
+                                            }
+
+                                            @Override
+                                            public void onCancelled(@NonNull @NotNull DatabaseError error) {
+
+                                            }
+                                        });
+
+
+
+
+                                    } else {
+                                        Log.d(TAG, "barcodeResult: scanner got " + stringBuilder.toString() + " instead of " + getIntent().getStringExtra(getString(R.string.carNumber)));
+//                                        Toast.makeText(QRCodeScanning.this, "QRCode didn't match ", Toast.LENGTH_SHORT).show();
+                                    }
+                                }else{
+                                    if(getIntent().hasExtra("carsNumberArray")){
+                                        Bundle bundle = getIntent().getExtras();
+                                        ArrayList<CharSequence> carsNumbers = bundle.getCharSequenceArrayList("carsNumberArray");
+                                        String areas = (String) bundle.getCharSequence("Areas");
+                                        if(carsNumbers.contains(id)){
+                                            Toast.makeText(QRCodeScanning.this, "Car Verified", Toast.LENGTH_SHORT).show();
+                                            reference.child("Car Status").child(carNumber).child("status").setValue("scanned");
+                                            reference.child("Car Status").child(carNumber).child("timeStamp").setValue(String.valueOf(timeStamp));
+                                            FirebaseDatabase.getInstance().getReference().child(employeeType).child(FirebaseAuth.getInstance().getUid()).child(status).setValue("working");
+                                            FirebaseDatabase.getInstance().getReference().child(employeeType).child(FirebaseAuth.getInstance().getUid()).child("working on").setValue(carNumber);
+                                            FirebaseDatabase.getInstance().getReference().child(employeesType).child(areas).child(FirebaseAuth.getInstance().getUid()).child("working on").setValue(carNumber);
+                                            Intent returnIntent = new Intent();
+                                            setResult(Activity.RESULT_OK, returnIntent);
+                                            finish();
+                                        }else {
+                                            Toast.makeText(QRCodeScanning.this, "You don't have this car to clean", Toast.LENGTH_SHORT).show();
+                                        }
+                                    }
+                                }
                             }
-                        });
+                        };
+
+                        handler.postDelayed(runnable,400);
+
+                    }
                 }
 
                 public void release() {}

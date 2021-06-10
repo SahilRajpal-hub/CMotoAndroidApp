@@ -3,17 +3,28 @@ package com.example.cmotoemployee.EmployeeActivities;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.Matrix;
+import android.media.ExifInterface;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
+import android.os.Parcelable;
 import android.os.StrictMode;
 import android.os.SystemClock;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import com.droidnet.DroidListener;
@@ -23,6 +34,10 @@ import com.example.cmotoemployee.InteriorEmployeeActivities.InteriorHomeActivity
 import com.example.cmotoemployee.Model.Car;
 import com.example.cmotoemployee.R;
 import com.example.cmotoemployee.RoundedTransformation;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -30,19 +45,26 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.nostra13.universalimageloader.utils.L;
 import com.squareup.picasso.MemoryPolicy;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.RequestCreator;
 import com.squareup.picasso.Transformation;
+
+import org.jetbrains.annotations.NotNull;
+
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.util.Calendar;
 
 public class StartCarCleaningActivity extends AppCompatActivity implements DroidListener {
     private static final int CAMERA_REQUEST_CODE = 2;
+    private static final int IMAGE_REQUEST_CODE = 21;
 
     private static final int SCANNED_ACTIVITY_RESULT = 29;
 
@@ -67,6 +89,8 @@ public class StartCarCleaningActivity extends AppCompatActivity implements Droid
     private String area;
 
     private FirebaseAuth auth;
+
+    private LinearLayout loadingEffect;
 
     private ImageView back;
 
@@ -98,7 +122,7 @@ public class StartCarCleaningActivity extends AppCompatActivity implements Droid
 
     private DatabaseReference reference;
 
-    private boolean scanned = false;
+    private boolean scanned = true;
 
     private String status;
 
@@ -112,32 +136,153 @@ public class StartCarCleaningActivity extends AppCompatActivity implements Droid
         return byteArrayOutputStream.toByteArray();
     }
 
-    protected void onActivityResult(int paramInt1, int paramInt2, Intent paramIntent) {
-        super.onActivityResult(paramInt1, paramInt2, paramIntent);
-        Log.d("StartCarCleanActivity", "onActivityResult: ");
-        Calendar calendar = Calendar.getInstance();
-        this.auth = FirebaseAuth.getInstance();
-        this.storageReference = FirebaseStorage.getInstance().getReference().child("cars/" + this.area + "/" + this.CarNumber + "/" + calendar.getTime());
-        if (paramIntent != null) {
-            if (paramInt1 == 29) {
-                Log.d("StartCarCleanActivity", "onActivityResult: qr code is scanned");
-                setTimer();
-            }
-            if (paramInt1 == 2) {
-                Log.d("StartCarCleanActivity", "onActivityResult: image is captured by interior employee");
-                DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
-                this.reference = databaseReference;
-                databaseReference.child("Car Status").child(getIntent().getStringExtra(getString(R.string.carNumber))).child(this.status).setValue("scanned");
-                this.reference.child("Car Status").child(getIntent().getStringExtra(getString(R.string.carNumber))).child("timeStamp").setValue(String.valueOf(System.currentTimeMillis()));
-                this.reference.child("InteriorEmployee").child(FirebaseAuth.getInstance().getUid()).child("status").setValue("working");
-                this.reference.child("InteriorEmployee").child(FirebaseAuth.getInstance().getUid()).child("working on").setValue(getIntent().getStringExtra(getString(R.string.carNumber)));
-                this.reference.child("InteriorEmployees").child(area).child(FirebaseAuth.getInstance().getUid()).child("working on").setValue(getIntent().getStringExtra(getString(R.string.carNumber)));
-                setTimer();
-            }
+    private String getRealPathFromURI(Uri paramUri) {
+        String str;
+        Cursor cursor = getContentResolver().query(paramUri, null, null, null, null);
+        if (cursor == null) {
+            str = paramUri.getPath();
+        } else {
+            cursor.moveToFirst();
+            str = cursor.getString(cursor.getColumnIndex("_data"));
+            cursor.close();
+        }
+        return str;
+    }
+
+    public static Bitmap rotate(Bitmap paramBitmap, float paramFloat) {
+        Matrix matrix = new Matrix();
+        matrix.postRotate(paramFloat);
+        return Bitmap.createBitmap(paramBitmap, 0, 0, paramBitmap.getWidth(), paramBitmap.getHeight(), matrix, true);
+    }
+
+    public static Bitmap flip(Bitmap paramBitmap, boolean paramBoolean1, boolean paramBoolean2) {
+        float f2;
+        Matrix matrix = new Matrix();
+        float f1 = -1.0F;
+        if (paramBoolean1) {
+            f2 = -1.0F;
+        } else {
+            f2 = 1.0F;
+        }
+        if (!paramBoolean2)
+            f1 = 1.0F;
+        matrix.preScale(f2, f1);
+        return Bitmap.createBitmap(paramBitmap, 0, 0, paramBitmap.getWidth(), paramBitmap.getHeight(), matrix, true);
+    }
+
+    public Bitmap modifyOrientation(Bitmap paramBitmap, Uri paramUri) {
+        Log.d("UploadImagesActivity", "modifyOrientation: Absolute path : " + paramUri);
+        try {
+            ExifInterface exifInterface = new ExifInterface(getRealPathFromURI(paramUri));
+//            this(getRealPathFromURI(paramUri));
+            int i = exifInterface.getAttributeInt("Orientation", 1);
+            StringBuilder stringBuilder = new StringBuilder();
+//            this();
+            Log.d("UploadImagesActivity", stringBuilder.append("modifyOrientation: orientation got:").append(i).toString());
+            return (i != 2) ? ((i != 3) ? ((i != 4) ? ((i != 6) ? ((i != 8) ? paramBitmap : rotate(paramBitmap, 270.0F)) : rotate(paramBitmap, 90.0F)) : flip(paramBitmap, false, true)) : rotate(paramBitmap, 180.0F)) : flip(paramBitmap, true, false);
+        } catch (Exception exception) {
+            Log.d("UploadImagesActivity", "modifyOrientation: error : " + exception.toString());
+            exception.printStackTrace();
+            return paramBitmap;
         }
     }
 
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        Log.d("StartCarCleanActivity", "onActivityResult: " + requestCode + " " + resultCode + " " + data);
+        Calendar calendar = Calendar.getInstance();
+        this.auth = FirebaseAuth.getInstance();
+        this.storageReference = FirebaseStorage.getInstance().getReference().child("cars/" + this.area + "/" + this.CarNumber + "/photo" + calendar.getTime());
+        if (data != null) {
+            if (requestCode == SCANNED_ACTIVITY_RESULT) {
+                Log.d("StartCarCleanActivity", "onActivityResult: qr code is scanned");
+                if (resultCode == Activity.RESULT_OK) {
+                    scanned = true;
+                    setTimer();
+                }
+
+            }
+            if (requestCode == CAMERA_REQUEST_CODE) {
+                Log.d("StartCarCleanActivity", "onActivityResult: image is captured by interior employee");
+                DatabaseReference reference = FirebaseDatabase.getInstance().getReference();
+
+                reference.child("Car Status").child(getIntent().getStringExtra(getString(R.string.carNumber))).child(this.status).setValue("scanned");
+                reference.child("Car Status").child(getIntent().getStringExtra(getString(R.string.carNumber))).child("timeStamp").setValue(String.valueOf(System.currentTimeMillis()));
+                reference.child("InteriorEmployee").child(FirebaseAuth.getInstance().getUid()).child("status").setValue("working");
+                reference.child("InteriorEmployee").child(FirebaseAuth.getInstance().getUid()).child("working on").setValue(getIntent().getStringExtra(getString(R.string.carNumber)));
+                reference.child("InteriorEmployees").child(area).child(FirebaseAuth.getInstance().getUid()).child("working on").setValue(getIntent().getStringExtra(getString(R.string.carNumber)));
+                scanned = true;
+                setTimer();
+            }
+        }
+
+            if(requestCode == IMAGE_REQUEST_CODE && resultCode!=0){
+                Log.d("UploadImagesActivity", "onActivityResult: request code is for camera");
+                this.progressBar.setVisibility(View.VISIBLE);
+                this.loadingEffect.setVisibility(View.VISIBLE);
+                getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+
+                Uri uri1 = Uri.fromFile(new File(Environment.getExternalStorageDirectory().getPath(), "carPhoto.jpg"));
+
+                Bitmap bitmap = null;
+                try {
+//                    bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), uri1);
+                    bitmap = modifyOrientation(MediaStore.Images.Media.getBitmap(getContentResolver(), uri1), uri1);
+                    int side = Math.min(bitmap.getHeight(),bitmap.getWidth());
+                    bitmap = Bitmap.createScaledBitmap(bitmap,side,side,true);
+                } catch (IOException ioException) {
+                    ioException.printStackTrace();
+                }
+
+                byte[] bytes = getByteFromBitmap(bitmap, 70);
+                UploadTask uploadTask = null;
+                uploadTask = storageReference.putBytes(bytes);
+                uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                        storageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                            @Override
+                            public void onSuccess(Uri uri) {
+                                String URI = uri.toString();
+                                try {
+                                    FirebaseDatabase.getInstance().getReference().child("cars/"+area+"/"+getIntent().getStringExtra(getString(R.string.carNumber))+"/photo").setValue(URI);
+                                    Toast.makeText(StartCarCleaningActivity.this, "Photo updated", Toast.LENGTH_SHORT).show();
+                                } catch (Exception e) {
+                                    Log.d(TAG, "onSuccess: got error after uploading" + e.getMessage());
+                                    Toast.makeText(StartCarCleaningActivity.this, "error : " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                        });
+                    }
+                }).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull @NotNull Task<UploadTask.TaskSnapshot> task) {
+
+                        progressBar.setVisibility(View.GONE);
+                        loadingEffect.setVisibility(View.GONE);
+                        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+
+                    }
+                }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onProgress(@NonNull @NotNull UploadTask.TaskSnapshot snapshot) {
+                        Toast.makeText(StartCarCleaningActivity.this, "Uploading Images", Toast.LENGTH_SHORT).show();
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull @NotNull Exception e) {
+
+                        progressBar.setVisibility(View.GONE);
+                        loadingEffect.setVisibility(View.GONE);
+                        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                    }
+                });
+            }
+
+    }
+
     protected void onCreate(Bundle paramBundle) {
+        StrictMode.setVmPolicy((new StrictMode.VmPolicy.Builder()).build());
         super.onCreate(paramBundle);
         setContentView(R.layout.activity_start_car_cleaning);
         Thread.setDefaultUncaughtExceptionHandler((Thread.UncaughtExceptionHandler)new CrashHandler(getApplicationContext()));
@@ -156,6 +301,7 @@ public class StartCarCleaningActivity extends AppCompatActivity implements Droid
         this.carCharacteristics = (TextView)findViewById(R.id.carModel);
         this.carLocation = (TextView)findViewById(R.id.carLocation);
         this.carPhoto = (ImageView)findViewById(R.id.carPhoto);
+        this.loadingEffect = (LinearLayout)findViewById(R.id.loadingEffect);
         this.progressBar = (ProgressBar)findViewById(R.id.progressBar);
         this.OpenMap = (ImageView)findViewById(R.id.openMap);
         this.carColor = (TextView)findViewById(R.id.carColor);
@@ -202,6 +348,8 @@ public class StartCarCleaningActivity extends AppCompatActivity implements Droid
                         } else if (car.getCategory().toLowerCase().equals("sedan") || car.getCategory().toLowerCase().equals("luv") || car.getCategory().toLowerCase().equals("compactsedan")) {
                             timerValue=1;
                         } else if (car.getCategory().toLowerCase().equals("suv")) {
+                            timerValue=1;
+                        } else if(car.getCategory().toLowerCase().equals("bike/scooty")) {
                             timerValue=1;
                         }
                         StartCarCleaningActivity.this.setTimer();
@@ -291,6 +439,20 @@ public class StartCarCleaningActivity extends AppCompatActivity implements Droid
                 });
             }
         });
+
+        carPhoto.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+
+                Intent intent = new Intent("android.media.action.IMAGE_CAPTURE");
+                intent.putExtra("output", (Parcelable) Uri.parse("file:///sdcard/carPhoto.jpg"));
+                intent.putExtra(StartCarCleaningActivity.this.getString(R.string.carNumber), StartCarCleaningActivity.this.getIntent().getStringExtra("carNumber").toString());
+                startActivityForResult(intent, IMAGE_REQUEST_CODE);
+                return false;
+            }
+        });
+
+
         this.OpenMap.setOnClickListener(new View.OnClickListener() {
             public void onClick(View param1View) {
                 if (!StartCarCleaningActivity.this.Connected) {
@@ -300,12 +462,12 @@ public class StartCarCleaningActivity extends AppCompatActivity implements Droid
                 if (SystemClock.elapsedRealtime() - StartCarCleaningActivity.this.lastClicked < 1000L)
                     return;
                 lastClicked = SystemClock.elapsedRealtime();
-                Intent map = new Intent(StartCarCleaningActivity.this, MapsActivity.class);
-                Double latitude = Double.valueOf(location.substring(0,location.indexOf(",")));
-                Double longitude = Double.valueOf(location.substring(location.indexOf(",")+1));
-                map.putExtra(getString(R.string.latitude),latitude);
-                map.putExtra(getString(R.string.longitude),longitude);
-                startActivity(map);
+//                Intent map = new Intent(StartCarCleaningActivity.this, MapsActivity.class);
+//                Double latitude = Double.valueOf(location.substring(0,location.indexOf(",")));
+//                Double longitude = Double.valueOf(location.substring(location.indexOf(",")+1));
+//                map.putExtra(getString(R.string.latitude),latitude);
+//                map.putExtra(getString(R.string.longitude),longitude);
+//                startActivity(map);
             }
         });
     }
@@ -326,61 +488,55 @@ public class StartCarCleaningActivity extends AppCompatActivity implements Droid
         }
     }
 
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+    }
+
     public void setTimer() {
         Log.d("StartCarCleanActivity", "setTimer: entered setTimer function");
-        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference().child("Car Status").child(this.CarNumber);
-        this.reference = databaseReference;
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference().child("Car Status").child(getIntent().getStringExtra(getString(R.string.carNumber)));
+
         databaseReference.addValueEventListener(new ValueEventListener() {
             public void onCancelled(DatabaseError param1DatabaseError) {}
 
             public void onDataChange(DataSnapshot param1DataSnapshot) {
                 if (param1DataSnapshot != null)
                     try {
-                        if (!StartCarCleaningActivity.this.scanned) {
+                        if (StartCarCleaningActivity.this.scanned) {
                             Intent intent;
-//                            StartCarCleaningActivity.access$1702(StartCarCleaningActivity.this, true);
-                            scanned = true;
-                            long l = System.currentTimeMillis();
-                            Double double_ = Double.valueOf(param1DataSnapshot.child("timeStamp").getValue().toString());
-                            if (double_.doubleValue() == 0.0D)
-                                scanned = true;
-//                                StartCarCleaningActivity.access$1702(StartCarCleaningActivity.this, false);
-                            StringBuilder stringBuilder = new StringBuilder();
-//                            this();
-                            Log.d("StartCarCleanActivity", stringBuilder.append("onDataChange: got the timestamp : ").append(double_).toString());
-                            stringBuilder = new StringBuilder();
-//                            this();
-                            Log.d("StartCarCleanActivity", stringBuilder.append("onDataChange: timerValue : ").append(StartCarCleaningActivity.this.timerValue).toString());
-                            double d1 = l;
-                            double d2 = double_.doubleValue();
+//                            scanned = true;
+                            long currentTimeStamp = System.currentTimeMillis();
+                            Double timeStamp = Double.valueOf(param1DataSnapshot.child("timeStamp").getValue().toString());
+//                            if (timeStamp == 0)
+//                                scanned = true;
+                            Log.d("StartCarCleanActivity","onDataChange: got the timestamp : "+timeStamp);
+                            Log.d("StartCarCleanActivity", "onDataChange: timerValue : "+timerValue);
+
                             int i = StartCarCleaningActivity.this.timerValue;
-                            if (d1 - d2 < (i * 60000)) {
-                                stringBuilder = new StringBuilder();
-//                                this();
-                                Log.d("StartCarCleanActivity", stringBuilder.append("onDataChange: Timer is not complete timeStamp : ").append((l - double_.doubleValue()) / 60000.0D).toString());
-                                stringBuilder = new StringBuilder();
-//                                this();
-                                Log.d("StartCarCleanActivity", stringBuilder.append("onDataChange: difference is ").append(StartCarCleaningActivity.this.timerValue - (l - double_.doubleValue()) / 60000.0D).toString());
-                                float f = (float)(StartCarCleaningActivity.this.timerValue - (l - double_.doubleValue()) / 60000.0D);
-                                intent = new Intent();
-//                                this(timerActivity.class);
+                            if (currentTimeStamp - timeStamp < (i * 60000)) {
+                                Log.d("StartCarCleanActivity", "onDataChange: Timer is not complete timeStamp : " + (currentTimeStamp - timeStamp) / 60000);
+                                Log.d("StartCarCleanActivity", "onDataChange: difference is " + (timerValue - (currentTimeStamp - timeStamp) / 60000));
+                                float f = (float)(StartCarCleaningActivity.this.timerValue - (currentTimeStamp - timeStamp) / 60000.0D);
+                                intent = new Intent(StartCarCleaningActivity.this,timerActivity.class);
+
                                 intent.putExtra(StartCarCleaningActivity.this.getString(R.string.carNumber), StartCarCleaningActivity.this.CarNumber);
                                 intent.putExtra(StartCarCleaningActivity.this.getString(R.string.area), StartCarCleaningActivity.this.area);
                                 if (StartCarCleaningActivity.this.getIntent().hasExtra("interior"))
                                     intent.putExtra("interior", "interior");
                                 intent.putExtra("timeInMinutes", f);
                                 intent.putExtra("finalTimeInMinutes", StartCarCleaningActivity.this.timerValue);
-//                                StartCarCleaningActivity.this.startActivity(intent.addFlags(335544320));
+                                startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK));
                                 StartCarCleaningActivity.this.finish();
                             } else {
-                                stringBuilder = new StringBuilder();
-//                                this();
-                                Log.d("StartCarCleanActivity", stringBuilder.append("onDataChange: either timer is complete or not started ").toString());
-                                if (d2 != 0.0D) {
+                                Log.d("StartCarCleanActivity", "onDataChange: either timer is complete or not started ");
+                                if (timeStamp != 0) {
                                     Log.d("StartCarCleanActivity", "onDataChange: timer is completed and sent to timer activity");
-                                    float f = (float)(StartCarCleaningActivity.this.timerValue - (System.currentTimeMillis() - d2) / 60000.0D);
-                                    intent = new Intent();
-//                                    this(timerActivity.class);
+                                    float f = (float)(StartCarCleaningActivity.this.timerValue - (System.currentTimeMillis() - timeStamp) / 60000.0D);
+                                    intent = new Intent(StartCarCleaningActivity.this,timerActivity.class);
                                     intent.putExtra("carNumber", StartCarCleaningActivity.this.CarNumber);
                                     intent.putExtra("area", StartCarCleaningActivity.this.area);
                                     intent.putExtra("timeInMinutes", f);
@@ -388,7 +544,7 @@ public class StartCarCleaningActivity extends AppCompatActivity implements Droid
                                     if (StartCarCleaningActivity.this.getIntent().hasExtra("interior"))
                                         intent.putExtra("interior", "interior");
                                     StartCarCleaningActivity.this.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK));
-                                    StartCarCleaningActivity.this.finish();
+//                                    StartCarCleaningActivity.this.finish();
                                 }
                             }
                         }
