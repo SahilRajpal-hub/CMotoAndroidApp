@@ -82,14 +82,16 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     public RecyclerViewAdapter(List<CarListItem> paramList, Context paramContext, HashMap<String,String> paramString1, String paramString2, String paramString3) {
         this.carItems = paramList;
         this.context = paramContext;
-        this.Area = paramString1.get(carItems.get(0));
+        this.Area = paramString1.get(carItems.get(0).getNumber());
         this.daysCar = paramString3;
+        Log.d(TAG, "RecyclerViewAdapter: Area : " + Area);
         if (paramString2.equals("interior")) {
             Log.d("RecyclerViewAdapter", "RecyclerViewAdapter: employeeType : interior");
             this.isInterior = true;
             this.employeeType = "InteriorEmployee";
             this.status = "Interior Cleaning status";
             this.AreaKey = paramString1;
+            Log.d(TAG, "RecyclerViewAdapter: AreaKey : " + AreaKey);
         } else {
             this.employeeType = "Employee";
             this.status = "status";
@@ -144,8 +146,8 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                     holder.lastCleaned.setText(str + "");
                 }
             });
-        if (((CarListItem)this.carItems.get(position)).getLeaveTime().equals("Before 6am") || ((CarListItem)this.carItems.get(position)).getLeaveTime().equals("7am-8am") || ((CarListItem)this.carItems.get(position)).getLeaveTime().equals("6am-7am"))
-            holder.background.setBackgroundDrawable(gd);
+//        if (((CarListItem)this.carItems.get(position)).getLeaveTime().equals("Before 6am") || ((CarListItem)this.carItems.get(position)).getLeaveTime().equals("7am-8am") || ((CarListItem)this.carItems.get(position)).getLeaveTime().equals("6am-7am"))
+//            holder.background.setBackgroundDrawable(gd);
 //            holder.background.setBackgroundColor(ContextCompat.getColor(this.context, R.color.colorAccentLight));
         Picasso.get().load(carItems.get(position).getPhoto()).transform((Transformation)new RoundedTransformation(60, 0)).into(holder.CarPhoto);
         FirebaseDatabase.getInstance().getReference(this.employeeType).child(this.auth.getUid()).child("working on").addValueEventListener(new ValueEventListener() {
@@ -212,7 +214,11 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                                     intent.putExtra("interior", "interior");
                                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                                 intent.putExtra(RecyclerViewAdapter.this.context.getString(R.string.carNumber), holder.CarNumber.getText().toString());
-                                intent.putExtra(RecyclerViewAdapter.this.context.getString(R.string.Area), RecyclerViewAdapter.this.Area);
+                                if(isInterior){
+                                    intent.putExtra(RecyclerViewAdapter.this.context.getString(R.string.Area), AreaKey.get(holder.CarNumber.getText().toString()));
+                                }else{
+                                    intent.putExtra(RecyclerViewAdapter.this.context.getString(R.string.Area), Area);
+                                }
                                 intent.putExtra("daysCar", RecyclerViewAdapter.this.daysCar);
                                 RecyclerViewAdapter.this.context.startActivity(intent);
                                 return;

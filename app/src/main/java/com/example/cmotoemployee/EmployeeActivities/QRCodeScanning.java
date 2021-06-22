@@ -29,8 +29,6 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.journeyapps.barcodescanner.CompoundBarcodeView;
-import com.journeyapps.barcodescanner.camera.CameraSettings;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -42,7 +40,7 @@ public class QRCodeScanning extends AppCompatActivity {
 
     private static final int requestPermissionID = 101;
 
-    private CompoundBarcodeView barcodeView;
+//    private CompoundBarcodeView barcodeView;
 
     private FirebaseDatabase database;
 
@@ -64,7 +62,7 @@ public class QRCodeScanning extends AppCompatActivity {
 
     private TextView scanAnotherCar;
 
-    private CameraSettings settings;
+//    private CameraSettings settings;
 
     private String status;
 

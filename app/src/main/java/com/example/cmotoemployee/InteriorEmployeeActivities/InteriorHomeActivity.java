@@ -26,6 +26,7 @@ import com.droidnet.DroidListener;
 import com.droidnet.DroidNet;
 import com.example.cmotoemployee.Adapter.RecyclerViewAdapter;
 import com.example.cmotoemployee.Authentication.StartActivity;
+import com.example.cmotoemployee.EmployeeActivities.HomeActivity;
 import com.example.cmotoemployee.EmployeeActivities.ProfileActivity;
 import com.example.cmotoemployee.ErrorHandler.CrashHandler;
 import com.example.cmotoemployee.Model.CarListItem;
@@ -39,6 +40,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+
 import org.jetbrains.annotations.NotNull;
 
 import java.text.SimpleDateFormat;
@@ -50,6 +52,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 
 public class InteriorHomeActivity extends AppCompatActivity implements DroidListener {
@@ -288,6 +291,7 @@ public class InteriorHomeActivity extends AppCompatActivity implements DroidList
                     InteriorHomeActivity.this.mAuth.signOut();
                     InteriorHomeActivity.this.startActivity(new Intent((Context)InteriorHomeActivity.this, StartActivity.class));
                     InteriorHomeActivity.this.finish();
+//                    Toast.makeText(InteriorHomeActivity.this, "This is new Version", Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -390,6 +394,31 @@ public class InteriorHomeActivity extends AppCompatActivity implements DroidList
                 }
             }
         });
+
+        if(getIntent().hasExtra("reload")){
+            carsRemaining=0;
+            carsDone=0;
+            String str = (new SimpleDateFormat("yyyy-MM-dd")).format(Calendar.getInstance().getTime());
+            FirebaseDatabase.getInstance().getReference().child("InteriorEmployee").child(FirebaseAuth.getInstance().getUid()).child("Interior Work History").child(str).addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull @NotNull DataSnapshot snapshot) {
+                    if(snapshot.exists()){
+                        Log.d(TAG, "onDataChange: snapshot : " + snapshot.getChildrenCount());
+                        carsCleaned.setText((int) snapshot.getChildrenCount() + "\n" + "done");
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull @NotNull DatabaseError error) {
+
+                }
+            });
+            receiveData("mondayCars", mondayCars);
+            receiveData("tuesdayCars", tuesdayCars);
+            receiveData("wednesdayCars", wednesdayCars);
+            receiveData("thursdayCars", thursdayCars);
+            receiveData("fridayCars", fridayCars);
+        }
 
         refreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             public void onRefresh() {
@@ -511,9 +540,15 @@ public class InteriorHomeActivity extends AppCompatActivity implements DroidList
 
 
                         for (int finalI = 0; finalI < carsToBeWashed[0].size(); finalI++) {
-                            DatabaseReference databaseReference = InteriorHomeActivity.this.reference.child("cars").child(Area.get(carsToBeWashed[0].get(finalI))).child((String) carsToBeWashed[0].get(finalI));
-                            Log.d("InteriorHomeActivity", "onDataChange: area = " + InteriorHomeActivity.this.Area + " car = " + (String)carsToBeWashed[0].get(finalI));
                             int finalI1 = finalI;
+                            Log.d("InteriorHomeActivity", "onDataChange: area = " + InteriorHomeActivity.this.Area + " car = " + (String)carsToBeWashed[0].get(finalI1));
+                            if(Area.get(carsToBeWashed[0].get(finalI1))==null){
+                                Log.d(TAG, "onSuccess: car giving null : "+ carsToBeWashed[0].get(finalI1));
+                                continue;
+                            }
+                            DatabaseReference databaseReference = reference.child("cars").child(Objects.requireNonNull(Area.get(carsToBeWashed[0].get(finalI1)))).child((String) carsToBeWashed[0].get(finalI1));
+
+
                             databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
                                 public void onCancelled(DatabaseError param2DatabaseError) {
                                     InteriorHomeActivity.this.progressBar.setVisibility(View.GONE);
@@ -582,7 +617,7 @@ public class InteriorHomeActivity extends AppCompatActivity implements DroidList
     public void getAreas(ArrayList<String> carsToBeWashed,OnGetListener listener){
         Log.d(TAG, "getAreas: function called");
 
-        Log.d(TAG, "getAreas: carsTobeWadhed : " + carsToBeWashed.toString());
+        Log.d(TAG, "getAreas: carsToBeWashed : " + carsToBeWashed.toString());
         for(int carIndex=0; carIndex<carsToBeWashed.size(); carIndex++){
             int finalCarIndex = carIndex;
             Log.d(TAG, "getAreas: car : " + carsToBeWashed.get(carIndex));
@@ -591,6 +626,7 @@ public class InteriorHomeActivity extends AppCompatActivity implements DroidList
                 public void onDataChange(@NonNull @NotNull DataSnapshot snapshot) {
                     if(snapshot.exists()) {
                         Area.put((String) carsToBeWashed.get(finalCarIndex), snapshot.getValue().toString());
+                        Log.d(TAG, "onDataChange: area : " + Area);
                         Log.d(TAG, "onDataChange: done : " + finalCarIndex + " : " + carsToBeWashed.size());
                         if (finalCarIndex == carsToBeWashed.size() - 1) {
                             listener.onSuccess();

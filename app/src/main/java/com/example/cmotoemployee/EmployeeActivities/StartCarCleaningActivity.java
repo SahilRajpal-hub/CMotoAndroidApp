@@ -48,7 +48,6 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
-import com.google.zxing.integration.android.IntentIntegrator;
 import com.nostra13.universalimageloader.utils.L;
 import com.squareup.picasso.MemoryPolicy;
 import com.squareup.picasso.Picasso;
@@ -110,7 +109,7 @@ public class StartCarCleaningActivity extends AppCompatActivity implements Droid
 
     private DroidNet droidNet;
 
-    private IntentIntegrator integrator;
+//    private IntentIntegrator integrator;
 
     private long lastClicked = 0L;
 
@@ -246,6 +245,7 @@ public class StartCarCleaningActivity extends AppCompatActivity implements Droid
                                 String URI = uri.toString();
                                 try {
                                     FirebaseDatabase.getInstance().getReference().child("cars/"+area+"/"+getIntent().getStringExtra(getString(R.string.carNumber))+"/photo").setValue(URI);
+                                    Picasso.get().load(URI).transform(new RoundedTransformation(30, 0)).memoryPolicy(MemoryPolicy.NO_CACHE).into(carPhoto);
                                     Toast.makeText(StartCarCleaningActivity.this, "Photo updated", Toast.LENGTH_SHORT).show();
                                 } catch (Exception e) {
                                     Log.d(TAG, "onSuccess: got error after uploading" + e.getMessage());
@@ -444,7 +444,7 @@ public class StartCarCleaningActivity extends AppCompatActivity implements Droid
             @Override
             public boolean onLongClick(View v) {
 
-                Intent intent = new Intent("android.media.action.IMAGE_CAPTURE");
+                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                 intent.putExtra("output", (Parcelable) Uri.parse("file:///sdcard/carPhoto.jpg"));
                 intent.putExtra(StartCarCleaningActivity.this.getString(R.string.carNumber), StartCarCleaningActivity.this.getIntent().getStringExtra("carNumber").toString());
                 startActivityForResult(intent, IMAGE_REQUEST_CODE);

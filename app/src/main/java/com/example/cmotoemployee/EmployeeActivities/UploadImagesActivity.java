@@ -454,7 +454,24 @@ public class UploadImagesActivity extends AppCompatActivity {
                                 reference.child(employeeType).child(FirebaseAuth.getInstance().getUid()).child("working on").setValue("");
                                 reference.child(employeesType).child(area).child(FirebaseAuth.getInstance().getUid()).child("working on").setValue("");
                                 reference.child(employeeType).child(auth.getUid()).child(employeeWorkHistory).child(date).child(carNumber).child("time").setValue(Calendar.getInstance().getTime());
-                                reference.child(employeeType).child(auth.getUid()).child(employeeWorkHistory).child(date).child(carNumber).child("Image Url " + n).setValue(URI);
+                                reference.child(employeeType).child(auth.getUid()).child(employeeWorkHistory).child(date).child(carNumber).child("Image Url " + n).setValue(URI).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                    @Override
+                                    public void onComplete(@NonNull @NotNull Task<Void> task) {
+                                        result.recycle();
+                                        parts[0].recycle();
+                                        parts[1].recycle();
+                                        parts[2].recycle();
+                                        parts[3].recycle();
+                                        progressBar.setVisibility(View.GONE);
+                                        loadingEffect.setVisibility(View.GONE);
+                                        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                                        if (UploadImagesActivity.this.getIntent().hasExtra("interior")) {
+                                            startActivity(new Intent(UploadImagesActivity.this,InteriorHomeActivity.class).putExtra("interior","InteriorEmployee").putExtra("reload","reload").addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
+                                        } else {
+                                            startActivity(new Intent(UploadImagesActivity.this,HomeActivity.class).putExtra("reload","reload").addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
+                                        }
+                                    }
+                                });
                             } catch (Exception e) {
                                 Log.d(TAG, "onSuccess: got error after uploading" + e.getMessage());
                                 Toast.makeText(UploadImagesActivity.this, "error : " + e.getMessage(), Toast.LENGTH_SHORT).show();
@@ -465,21 +482,8 @@ public class UploadImagesActivity extends AppCompatActivity {
             }).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
                 @Override
                 public void onComplete(@NonNull @NotNull Task<UploadTask.TaskSnapshot> task) {
-                    result.recycle();
-                    parts[0].recycle();
-                    parts[1].recycle();
-                    parts[2].recycle();
-                    parts[3].recycle();
-                    progressBar.setVisibility(View.GONE);
-                    loadingEffect.setVisibility(View.GONE);
-                    getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
-                    if (UploadImagesActivity.this.getIntent().hasExtra("interior")) {
-                        startActivity(new Intent(UploadImagesActivity.this,InteriorHomeActivity.class).putExtra("interior","InteriorEmployee").addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
-                    } else {
-                        startActivity(new Intent(UploadImagesActivity.this,HomeActivity.class).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
-                    }
 
-//                    finish();
+                    Toast.makeText(UploadImagesActivity.this, "Image Uploaded", Toast.LENGTH_SHORT).show();
 
                 }
             }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {

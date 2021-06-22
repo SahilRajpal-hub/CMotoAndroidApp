@@ -1,5 +1,6 @@
 package com.example.cmotoemployee.EmployeeActivities;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -29,6 +30,8 @@ import com.example.cmotoemployee.Authentication.StartActivity;
 import com.example.cmotoemployee.ErrorHandler.CrashHandler;
 import com.example.cmotoemployee.Model.CarListItem;
 import com.example.cmotoemployee.R;
+import com.github.javiersantos.appupdater.AppUpdater;
+import com.github.javiersantos.appupdater.enums.Display;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -37,6 +40,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.nostra13.universalimageloader.utils.L;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -47,6 +52,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 
 public class HomeActivity extends AppCompatActivity implements DroidListener {
     private static final String TAG = "HomeActivity";
@@ -217,21 +223,35 @@ public class HomeActivity extends AppCompatActivity implements DroidListener {
         this.leaveTimeList = new ArrayList<>();
         this.carItems = new ArrayList<>();
         this.todayCars = "";
+
+//        AppUpdater appUpdater = new AppUpdater(this)
+//                                    .setDisplay(Display.DIALOG)
+//                .setUpdateXML("https://raw.githubusercontent.com/SahilRajpal-hub/appAutoUpdateXml/main/update.xml")
+//                .showEvery(1).setTitleOnUpdateAvailable("Update available")
+//                .setContentOnUpdateAvailable("Check out the latest version available of my app!")
+//                .setTitleOnUpdateNotAvailable("Update not available")
+//                .setContentOnUpdateNotAvailable("No update available. Check for updates again later!")
+//                .setButtonUpdate("Update now?")
+//                .setButtonDismiss("Maybe later")
+//                .setButtonDoNotShowAgain("Huh, not interested");
+//        appUpdater.start();
+
+
         try {
             DroidNet droidNet = DroidNet.getInstance();
             this.droidNet = droidNet;
             droidNet.addInternetConnectivityListener(this);
         } catch (Exception exception) {
-            Log.e("HomeActivity", "onCreate: error : " + exception.getStackTrace());
+            Log.e("HomeActivity", "onCreate: error : " + Arrays.toString(exception.getStackTrace()));
         }
         if (!this.isConnected)
             Toast.makeText((Context)this, "Internet connection lost", Toast.LENGTH_SHORT).show();
-        this.reference.child("Employee").child(this.mAuth.getUid()).addValueEventListener(new ValueEventListener() {
-            public void onCancelled(DatabaseError param1DatabaseError) {}
+        this.reference.child("Employee").child(mAuth.getUid()).addValueEventListener(new ValueEventListener() {
+            public void onCancelled(@NotNull DatabaseError param1DatabaseError) {}
 
-            public void onDataChange(DataSnapshot param1DataSnapshot) {
-                String date = new SimpleDateFormat("yyyy-MM-dd").format(Calendar.getInstance().getTime());
-                HomeActivity.this.name.setText(param1DataSnapshot.child("Name").getValue().toString());
+            public void onDataChange(@NotNull DataSnapshot param1DataSnapshot) {
+                @SuppressLint("SimpleDateFormat") String date = new SimpleDateFormat("yyyy-MM-dd").format(Calendar.getInstance().getTime());
+                HomeActivity.this.name.setText(Objects.requireNonNull(param1DataSnapshot.child("Name").getValue()).toString());
                 carsDone = (int) param1DataSnapshot.child("Work History").child(date).getChildrenCount();
                 carsDone = carsDone==0 ? carsDone : carsDone-1;
             }
@@ -274,6 +294,7 @@ public class HomeActivity extends AppCompatActivity implements DroidListener {
                     HomeActivity.this.startActivity(new Intent((Context)HomeActivity.this, StartActivity.class));
                     HomeActivity.this.finish();
                 }
+//                Toast.makeText(HomeActivity.this, "Just to check", Toast.LENGTH_SHORT).show();
             }
         });
         this.faceBook.setOnClickListener(new View.OnClickListener() {
@@ -349,6 +370,16 @@ public class HomeActivity extends AppCompatActivity implements DroidListener {
                 });
             }
         });
+        if(getIntent().hasExtra("reload")){
+            carsToBeWashed = new ArrayList<>();
+            deactivatedCars = new ArrayList<>();
+            carsModel = new ArrayList<>();
+            carsPhoto = new HashMap<>();
+            houseNumberList = new ArrayList<>();
+            leaveTimeList = new ArrayList<>();
+            carItems = new ArrayList<>();
+            HomeActivity.this.receiveData();
+        }
         this.refreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             public void onRefresh() {
                 carsToBeWashed = new ArrayList<>();
@@ -462,7 +493,7 @@ public class HomeActivity extends AppCompatActivity implements DroidListener {
                                         }
                                     } catch (Exception exception) {
                                         Log.d("HomeActivity", "onDataChange: error : " + exception.getMessage());
-                                        Toast.makeText((Context)HomeActivity.this, "error " + exception.getMessage(), Toast.LENGTH_SHORT).show();
+                                        Toast.makeText((Context)HomeActivity.this, "error due car "+ carsToBeWashed.get(finalI1) + exception.getMessage(), Toast.LENGTH_SHORT).show();
                                     }
                                     if (refreshLayout.isRefreshing()) {
                                         refreshLayout.setRefreshing(false);
@@ -475,8 +506,8 @@ public class HomeActivity extends AppCompatActivity implements DroidListener {
                                             HomeActivity.this.carsToBeWashed.remove(HomeActivity.this.WorkingOn);
                                             HomeActivity.this.carsToBeWashed.add(0, HomeActivity.this.WorkingOn);
                                         }
-                                        HomeActivity.this.setAdapter();
-                                        HomeActivity.this.progressBar.setVisibility(View.GONE);
+                                        setAdapter();
+                                        progressBar.setVisibility(View.GONE);
                                     }
                                 }
                             });
@@ -503,16 +534,16 @@ public class HomeActivity extends AppCompatActivity implements DroidListener {
             CarListItem carListItem = new CarListItem(this.carsToBeWashed.get(b), this.carsModel.get(b), this.carsPhoto.get(this.carsToBeWashed.get(b)), this.houseNumberList.get(b), this.leaveTimeList.get(b));
             this.carItems.add(carListItem);
         }
-        Collections.sort(this.carItems, new Comparator<CarListItem>() {
-            public int compare(CarListItem param1CarListItem1, CarListItem param1CarListItem2) {
-                return param1CarListItem1.getHouseNumber().compareTo(param1CarListItem2.getHouseNumber());
-            }
-        });
+//        Collections.sort(this.carItems, new Comparator<CarListItem>() {
+//            public int compare(CarListItem param1CarListItem1, CarListItem param1CarListItem2) {
+//                return param1CarListItem1.getHouseNumber().compareTo(param1CarListItem2.getHouseNumber());
+//            }
+//        });
         this.adapter = new RecyclerViewAdapter(this.carItems, (Context)this, this.Area, "exterior");
         this.recyclerView.setHasFixedSize(true);
         this.recyclerView.setMotionEventSplittingEnabled(false);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getApplicationContext());
-        this.layoutManager = (RecyclerView.LayoutManager)linearLayoutManager;
+
         this.recyclerView.setLayoutManager((RecyclerView.LayoutManager)linearLayoutManager);
         this.recyclerView.setAdapter((RecyclerView.Adapter)this.adapter);
         this.adapter.notifyDataSetChanged();
